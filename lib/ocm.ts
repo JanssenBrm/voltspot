@@ -1,5 +1,9 @@
 const OCM_BASE = 'https://api.openchargemap.io/v3/poi'
 
+// Keywords that identify car-only DC fast-charge connectors.
+// A station is only excluded if ALL its connectors match these keywords.
+const CAR_ONLY_KEYWORDS = ['chademo', 'ccs', 'combo', 'tesla', 'gb/t', 'supercharger', 'nacs']
+
 export interface OCMStation {
   ID: number
   AddressInfo: {
@@ -15,6 +19,22 @@ export interface OCMStation {
   }> | null
   UsageCost: string | null
   StatusType: { IsOperational: boolean } | null
+}
+
+/**
+ * Returns true if the station has at least one connector that could be used
+ * to charge an e-bike (i.e. not exclusively car-only DC fast-charge connectors).
+ */
+export function isBikeCompatible(station: OCMStation): boolean {
+  const connectors = (station.Connections ?? [])
+    .map((c) => c.ConnectionType?.Title?.toLowerCase() ?? '')
+    .filter(Boolean)
+
+  // No connector info — include by default (benefit of the doubt)
+  if (connectors.length === 0) return true
+
+  // Include if at least one connector is NOT in the car-only set
+  return connectors.some((c) => !CAR_ONLY_KEYWORDS.some((kw) => c.includes(kw)))
 }
 
 export async function fetchOCMStations(params: Record<string, string> = {}): Promise<OCMStation[]> {

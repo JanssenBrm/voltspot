@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { fetchOCMStations, mapOCMToStation } from '@/lib/ocm'
+import { fetchOCMStations, mapOCMToStation, isBikeCompatible } from '@/lib/ocm'
 import { db } from '@/lib/db'
 import { stations } from '@/lib/db/schema'
 import { sql } from 'drizzle-orm'
@@ -16,13 +16,14 @@ export async function GET(req: NextRequest) {
   const modifiedSince = twoDaysAgo.toISOString().split('T')[0]
 
   const ocmStations = await fetchOCMStations({ modifiedsince: modifiedSince, maxresults: '5000' })
+  const bikeStations = ocmStations.filter(isBikeCompatible)
 
   let inserted = 0
   let updated = 0
 
-  for (let i = 0; i < ocmStations.length; i++) {
-    const mapped = mapOCMToStation(ocmStations[i])
-    const result = await db
+  for (let i = 0; i < bikeStations.length; i++) {
+    const mapped = mapOCMToStation(bikeStations[i])
+    await db
       .insert(stations)
       .values(mapped)
       .onConflictDoUpdate({
@@ -40,10 +41,9 @@ export async function GET(req: NextRequest) {
           updatedAt: new Date(),
         },
       })
-      .returning()
 
-    if (i % 500 === 0) console.log(`Synced ${i}/${ocmStations.length}`)
+    if (i % 500 === 0) console.log(`Synced ${i}/${bikeStations.length}`)
   }
 
-  return NextResponse.json({ synced: ocmStations.length })
+  return NextResponse.json({ synced: bikeStations.length, filtered: ocmStations.length - bikeStations.length })
 }

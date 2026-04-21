@@ -2,7 +2,7 @@ import 'dotenv/config'
 import { neon } from '@neondatabase/serverless'
 import { drizzle } from 'drizzle-orm/neon-http'
 import * as schema from '../lib/db/schema'
-import { fetchOCMStations, mapOCMToStation } from '../lib/ocm'
+import { fetchOCMStations, mapOCMToStation, isBikeCompatible } from '../lib/ocm'
 
 const sql = neon(process.env.DATABASE_URL!)
 const db = drizzle(sql, { schema })
@@ -55,13 +55,14 @@ async function seedCountry(countryCode: string): Promise<{ inserted: number; ski
     if (raw.length === 0) break
 
     total += raw.length
-    const mapped = raw.map(mapOCMToStation)
+    const bikeOnly = raw.filter(isBikeCompatible)
+    const mapped = bikeOnly.map(mapOCMToStation)
     const result = await upsertBatch(mapped)
     inserted += result.inserted
     skipped += result.skipped
 
     console.log(
-      `  ${countryCode} offset ${startIndex}: fetched ${raw.length}, ` +
+      `  ${countryCode} offset ${startIndex}: fetched ${raw.length}, bike-compatible ${bikeOnly.length}, ` +
       `inserted ${result.inserted}, skipped ${result.skipped}`,
     )
 
