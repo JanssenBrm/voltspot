@@ -1,17 +1,17 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useSession } from 'next-auth/react'
+import { useUser } from '@clerk/nextjs'
 import { useEffect } from 'react'
 import AddStationModal from '@/components/stations/AddStationModal'
 
 export default function NewStationPage() {
-  const { data: session, status } = useSession()
+  const { isLoaded, isSignedIn } = useUser()
   const router = useRouter()
 
   useEffect(() => {
-    if (status === 'unauthenticated') router.push('/signin')
-  }, [status, router])
+    if (isLoaded && !isSignedIn) router.push('/sign-in')
+  }, [isLoaded, isSignedIn, router])
 
   return (
     <AddStationModal

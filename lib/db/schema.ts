@@ -10,48 +10,14 @@ import {
 } from 'drizzle-orm/pg-core'
 
 export const users = pgTable('users', {
-  id: uuid('id').primaryKey().defaultRandom(),
+  id: text('id').primaryKey(), // Clerk user ID (e.g. "user_2abc...")
   email: text('email').unique().notNull(),
-  emailVerified: timestamp('email_verified', { mode: 'date' }),
   name: text('name'),
-  image: text('image'), // required by NextAuth adapter
   avatarUrl: text('avatar_url'),
-  provider: text('provider'),
   role: text('role').default('user'),
   points: integer('points').default(0),
   createdAt: timestamp('created_at').defaultNow(),
 })
-
-export const accounts = pgTable('accounts', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
-  type: text('type').notNull(),
-  provider: text('provider').notNull(),
-  providerAccountId: text('provider_account_id').notNull(),
-  refresh_token: text('refresh_token'),
-  access_token: text('access_token'),
-  expires_at: integer('expires_at'),
-  token_type: text('token_type'),
-  scope: text('scope'),
-  id_token: text('id_token'),
-  session_state: text('session_state'),
-})
-
-export const sessions = pgTable('sessions', {
-  sessionToken: text('session_token').primaryKey(),
-  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
-  expires: timestamp('expires').notNull(),
-})
-
-export const verificationTokens = pgTable(
-  'verification_tokens',
-  {
-    identifier: text('identifier').notNull(),
-    token: text('token').notNull(),
-    expires: timestamp('expires').notNull(),
-  },
-  (t) => ({ unq: unique().on(t.identifier, t.token) }),
-)
 
 export const stations = pgTable('stations', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -68,9 +34,9 @@ export const stations = pgTable('stations', {
   isIndoor: boolean('is_indoor'),
   accessNotes: text('access_notes'),
   status: text('status').default('unverified'),
-  claimedBy: uuid('claimed_by').references(() => users.id),
+  claimedBy: text('claimed_by').references(() => users.id),
   claimedAt: timestamp('claimed_at'),
-  pioneerUserId: uuid('pioneer_user_id').references(() => users.id),
+  pioneerUserId: text('pioneer_user_id').references(() => users.id),
   source: text('source').default('ocm'),
   photos: text('photos').array(),
   createdAt: timestamp('created_at').defaultNow(),
@@ -80,7 +46,7 @@ export const stations = pgTable('stations', {
 export const checkIns = pgTable('check_ins', {
   id: uuid('id').primaryKey().defaultRandom(),
   stationId: uuid('station_id').references(() => stations.id).notNull(),
-  userId: uuid('user_id').references(() => users.id),
+  userId: text('user_id').references(() => users.id),
   rating: integer('rating'),
   comment: text('comment'),
   statusReported: text('status_reported'),
@@ -100,7 +66,7 @@ export const userBadges = pgTable(
   'user_badges',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    userId: uuid('user_id').references(() => users.id).notNull(),
+    userId: text('user_id').references(() => users.id).notNull(),
     badgeSlug: text('badge_slug').references(() => badges.slug).notNull(),
     earnedAt: timestamp('earned_at').defaultNow(),
   },
@@ -109,7 +75,7 @@ export const userBadges = pgTable(
 
 export const routes = pgTable('routes', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').references(() => users.id),
+  userId: text('user_id').references(() => users.id),
   name: text('name').notNull(),
   description: text('description'),
   stationIds: uuid('station_ids').array(),
@@ -120,7 +86,7 @@ export const routes = pgTable('routes', {
 
 export const leaderboardSnapshots = pgTable('leaderboard_snapshots', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').references(() => users.id).notNull(),
+  userId: text('user_id').references(() => users.id).notNull(),
   period: text('period'),
   countryCode: text('country_code'),
   rank: integer('rank'),

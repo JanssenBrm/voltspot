@@ -4,14 +4,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { put } from '@vercel/blob'
 import { db } from '@/lib/db'
 import { stations } from '@/lib/db/schema'
-import { eq, sql } from 'drizzle-orm'
-import { auth } from '@/lib/auth'
+import { eq } from 'drizzle-orm'
+import { auth } from '@clerk/nextjs/server'
 import { awardPoints } from '@/lib/points'
 import { checkAndAwardBadges } from '@/lib/badges'
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const { userId } = await auth()
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const formData = await req.formData()
   const files = formData.getAll('photos') as File[]
@@ -39,8 +39,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     .set({ photos: [...existingPhotos, ...uploaded], updatedAt: new Date() })
     .where(eq(stations.id, params.id))
 
-  await awardPoints(session.user.id, 15 * uploaded.length)
-  const newBadges = await checkAndAwardBadges(session.user.id)
+  await awardPoints(userId, 15 * uploaded.length)
+  const newBadges = await checkAndAwardBadges(userId)
 
   return NextResponse.json({ photos: uploaded, newBadges })
 }

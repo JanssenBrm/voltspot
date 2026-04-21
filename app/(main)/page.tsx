@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import dynamic from 'next/dynamic'
-import { useSession } from 'next-auth/react'
+import { useUser } from '@clerk/nextjs'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import SearchBar from '@/components/map/SearchBar'
@@ -24,7 +24,7 @@ const DEFAULT_FILTERS: Filters = {
 }
 
 export default function HomePage() {
-  const { data: session } = useSession()
+  const { user, isSignedIn } = useUser()
   const [stations, setStations] = useState<StationMarkerData[]>([])
   const [selectedStation, setSelectedStation] = useState<StationMarkerData | null>(null)
   const [bbox, setBbox] = useState<string | null>(null)
@@ -55,9 +55,9 @@ export default function HomePage() {
   }, [])
 
   const handleAddClick = () => {
-    if (!session?.user) {
+    if (!isSignedIn) {
       toast.info('Sign in to add a station', {
-        action: { label: 'Sign In', onClick: () => window.location.href = '/signin' },
+        action: { label: 'Sign In', onClick: () => window.location.href = '/sign-in' },
       })
       return
     }
@@ -89,7 +89,7 @@ export default function HomePage() {
           <StationPanel
             stationId={selectedStation.id}
             onClose={() => setSelectedStation(null)}
-            session={session}
+            userId={user?.id ?? null}
           />
         </div>
       )}
@@ -99,7 +99,7 @@ export default function HomePage() {
         <StationDrawer
           stationId={selectedStation?.id ?? null}
           onClose={() => setSelectedStation(null)}
-          session={session}
+          userId={user?.id ?? null}
         />
       </div>
 

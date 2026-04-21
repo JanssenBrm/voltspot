@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { stations } from '@/lib/db/schema'
 import { sql, and, gte, lte, eq } from 'drizzle-orm'
-import { auth } from '@/lib/auth'
+import { auth } from '@clerk/nextjs/server'
 import { awardPoints } from '@/lib/points'
 import { checkAndAwardBadges } from '@/lib/badges'
 
@@ -51,8 +51,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) {
+  const { userId } = await auth()
+  if (!userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -82,8 +82,8 @@ export async function POST(req: NextRequest) {
     })
     .returning()
 
-  await awardPoints(session.user.id, 30)
-  const newBadges = await checkAndAwardBadges(session.user.id)
+  await awardPoints(userId, 30)
+  const newBadges = await checkAndAwardBadges(userId)
 
   // Award trail-blazer badge on first submission
   const { db: drizzleDb } = await import('@/lib/db')
@@ -92,15 +92,15 @@ export async function POST(req: NextRequest) {
   const [existing] = await drizzleDb
     .select()
     .from(userBadges)
-    .where(eqFn(userBadges.userId, session.user.id))
+    .where(eqFn(userBadges.userId, userId))
     .limit(50)
 
   const hasTrailBlazer = existing && (existing as any).badgeSlug === 'trail-blazer'
   if (!hasTrailBlazer) {
     try {
-      await drizzleDb.insert(userBadges).values({ userId: session.user.id, badgeSlug: 'trail-blazer' })
+      await drizzleDb.insert(userBadges).values({ userId, badgeSlug: 'trail-blazer' })
       const [trailBadge] = await drizzleDb.select().from(badges).where(eqFn(badges.slug, 'trail-blazer')).limit(1)
-      if (trailBadge) await awardPoints(session.user.id, trailBadge.pointsValue ?? 0)
+      if (trailBadge) await awardPoints(userId, trailBadge.pointsValue ?? 0)
     } catch { /* already has it */ }
   }
 

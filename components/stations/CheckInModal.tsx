@@ -8,17 +8,16 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Star } from 'lucide-react'
 import { toast } from 'sonner'
-import type { Session } from 'next-auth'
 import Link from 'next/link'
 
 interface CheckInModalProps {
   open: boolean
   onClose: () => void
   stationId: string
-  session: Session | null
+  userId: string | null
 }
 
-export default function CheckInModal({ open, onClose, stationId, session }: CheckInModalProps) {
+export default function CheckInModal({ open, onClose, stationId, userId }: CheckInModalProps) {
   const [rating, setRating] = useState(0)
   const [hoverRating, setHoverRating] = useState(0)
   const [comment, setComment] = useState('')
@@ -56,7 +55,7 @@ export default function CheckInModal({ open, onClose, stationId, session }: Chec
 
       if (data.anonymous) {
         toast.info('Create an account to earn points and badges for this check-in!', {
-          action: { label: 'Sign Up', onClick: () => window.location.href = '/signup' },
+          action: { label: 'Sign Up', onClick: () => window.location.href = '/sign-up' },
         })
       }
 
@@ -108,7 +107,7 @@ export default function CheckInModal({ open, onClose, stationId, session }: Chec
             </Select>
           </div>
 
-          {session?.user && (
+          {userId && (
             <div className="space-y-1">
               <Label>Comment (optional)</Label>
               <Textarea
@@ -120,9 +119,9 @@ export default function CheckInModal({ open, onClose, stationId, session }: Chec
             </div>
           )}
 
-          {!session?.user && (
+          {!userId && (
             <p className="text-xs text-muted-foreground bg-muted rounded-lg p-3">
-              <Link href="/signup" className="text-green-500 font-medium hover:underline">Create an account</Link>{' '}
+              <Link href="/sign-up" className="text-green-500 font-medium hover:underline">Create an account</Link>{' '}
               to leave a comment and earn points for your check-in.
             </p>
           )}

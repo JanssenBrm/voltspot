@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { routes, users } from '@/lib/db/schema'
 import { eq, desc } from 'drizzle-orm'
-import { auth } from '@/lib/auth'
+import { auth } from '@clerk/nextjs/server'
 import { awardPoints } from '@/lib/points'
 import { checkAndAwardBadges } from '@/lib/badges'
 
@@ -35,8 +35,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const { userId } = await auth()
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json()
   const { name, description, stationIds, distanceKm, isPublic } = body
@@ -53,22 +53,22 @@ export async function POST(req: NextRequest) {
       stationIds,
       distanceKm,
       isPublic: isPublic ?? true,
-      userId: session.user.id,
+      userId,
     })
     .returning()
 
   if (isPublic) {
-    await awardPoints(session.user.id, 20)
+    await awardPoints(userId, 20)
     const { db: drizzleDb } = await import('@/lib/db')
     const { userBadges, badges } = await import('@/lib/db/schema')
     const { eq: eqFn } = await import('drizzle-orm')
     try {
-      await drizzleDb.insert(userBadges).values({ userId: session.user.id, badgeSlug: 'route-maker' })
+      await drizzleDb.insert(userBadges).values({ userId, badgeSlug: 'route-maker' })
       const [badge] = await drizzleDb.select().from(badges).where(eqFn(badges.slug, 'route-maker')).limit(1)
-      if (badge) await awardPoints(session.user.id, badge.pointsValue ?? 0)
+      if (badge) await awardPoints(userId, badge.pointsValue ?? 0)
     } catch { /* already earned */ }
   }
 
-  const newBadges = await checkAndAwardBadges(session.user.id)
+  const newBadges = await checkAndAwardBadges(userId)
   return NextResponse.json({ route, newBadges }, { status: 201 })
 }

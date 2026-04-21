@@ -10,7 +10,6 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { PLUG_COLORS, PLUG_ICONS } from '@/lib/plugTypes'
 import CheckInModal from '@/components/stations/CheckInModal'
 import ClaimButton from '@/components/stations/ClaimButton'
-import type { Session } from 'next-auth'
 import Image from 'next/image'
 import Link from 'next/link'
 
@@ -45,7 +44,7 @@ interface StationDetail {
 interface StationPanelProps {
   stationId: string
   onClose: () => void
-  session: Session | null
+  userId: string | null
 }
 
 const STATUS_CONFIG = {
@@ -54,7 +53,7 @@ const STATUS_CONFIG = {
   offline: { icon: XCircle, color: 'text-red-500', label: 'Offline' },
 }
 
-export default function StationPanel({ stationId, onClose, session }: StationPanelProps) {
+export default function StationPanel({ stationId, onClose, userId }: StationPanelProps) {
   const [station, setStation] = useState<StationDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [checkInOpen, setCheckInOpen] = useState(false)
@@ -187,7 +186,7 @@ export default function StationPanel({ stationId, onClose, session }: StationPan
                   Check In
                 </Button>
 
-                {!station.claimedBy && session?.user && (
+                {!station.claimedBy && userId && (
                   <ClaimButton stationId={station.id} onClaimed={refresh} />
                 )}
 
@@ -210,7 +209,7 @@ export default function StationPanel({ stationId, onClose, session }: StationPan
                   </Button>
                 </div>
 
-                {session?.user?.id === station.claimedBy && (
+                {userId === station.claimedBy && (
                   <Button variant="ghost" size="sm" asChild>
                     <Link href={`/stations/${station.id}?edit=1`}>
                       <Edit className="h-3 w-3 mr-1" />
@@ -272,7 +271,7 @@ export default function StationPanel({ stationId, onClose, session }: StationPan
           open={checkInOpen}
           onClose={() => setCheckInOpen(false)}
           stationId={station.id}
-          session={session}
+          userId={userId}
         />
       )}
     </div>

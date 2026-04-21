@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useSession, signOut } from 'next-auth/react'
+import { useUser, useClerk } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,13 +11,16 @@ import { Separator } from '@/components/ui/separator'
 import { toast } from 'sonner'
 
 export default function AccountPage() {
-  const { data: session, update } = useSession()
+  const { user, isLoaded, isSignedIn } = useUser()
+  const { signOut } = useClerk()
   const router = useRouter()
-  const [name, setName] = useState(session?.user?.name ?? '')
+  const [name, setName] = useState(user?.fullName ?? '')
   const [loading, setLoading] = useState(false)
 
-  if (!session?.user) {
-    router.push('/signin')
+  if (!isLoaded) return null
+
+  if (!isSignedIn) {
+    router.push('/sign-in')
     return null
   }
 
@@ -30,7 +33,6 @@ export default function AccountPage() {
         body: JSON.stringify({ name }),
       })
       if (!res.ok) throw new Error('Failed to save')
-      await update({ name })
       toast.success('Profile updated!')
     } catch {
       toast.error('Failed to update profile')
@@ -48,11 +50,11 @@ export default function AccountPage() {
         <h2 className="font-semibold">Profile</h2>
         <div className="flex items-center gap-4">
           <Avatar className="h-16 w-16">
-            <AvatarImage src={session.user.image ?? ''} />
-            <AvatarFallback className="text-xl">{session.user.name?.[0] ?? '?'}</AvatarFallback>
+            <AvatarImage src={user.imageUrl ?? ''} />
+            <AvatarFallback className="text-xl">{user.firstName?.[0] ?? '?'}</AvatarFallback>
           </Avatar>
           <div>
-            <p className="text-sm text-muted-foreground">{session.user.email}</p>
+            <p className="text-sm text-muted-foreground">{user.primaryEmailAddress?.emailAddress}</p>
           </div>
         </div>
         <div className="space-y-1">
@@ -69,7 +71,7 @@ export default function AccountPage() {
       {/* Sign out */}
       <section className="space-y-2">
         <h2 className="font-semibold">Session</h2>
-        <Button variant="outline" onClick={() => signOut({ callbackUrl: '/' })}>
+        <Button variant="outline" onClick={() => signOut({ redirectUrl: '/' })}>
           Sign Out
         </Button>
       </section>
@@ -84,7 +86,7 @@ export default function AccountPage() {
           variant="destructive"
           onClick={() => {
             if (confirm('Are you sure? This cannot be undone.')) {
-              fetch('/api/account', { method: 'DELETE' }).then(() => signOut({ callbackUrl: '/' }))
+              fetch('/api/account', { method: 'DELETE' }).then(() => signOut({ redirectUrl: '/' }))
             }
           }}
         >

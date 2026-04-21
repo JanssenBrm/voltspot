@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useSession } from 'next-auth/react'
+import { useUser } from '@clerk/nextjs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -48,7 +48,7 @@ function SortableStop({ station, onRemove }: { station: any; onRemove: () => voi
 }
 
 export default function NewRoutePage() {
-  const { data: session, status } = useSession()
+  const { isLoaded, isSignedIn } = useUser()
   const router = useRouter()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
@@ -65,8 +65,8 @@ export default function NewRoutePage() {
   )
 
   useEffect(() => {
-    if (status === 'unauthenticated') router.push('/signin')
-  }, [status, router])
+    if (isLoaded && !isSignedIn) router.push('/sign-in')
+  }, [isLoaded, isSignedIn, router])
 
   const doSearch = async () => {
     if (!search.trim()) return

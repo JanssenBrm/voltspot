@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useSession } from 'next-auth/react'
+import { useUser, useClerk, SignInButton } from '@clerk/nextjs'
 import { Map, Trophy, Route, User, Zap } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -17,7 +17,7 @@ const NAV_ITEMS = [
 
 export function TopNav() {
   const pathname = usePathname()
-  const { data: session } = useSession()
+  const { user, isSignedIn } = useUser()
 
   return (
     <header className="hidden md:flex fixed top-0 left-0 right-0 z-50 h-14 items-center border-b bg-background/95 backdrop-blur px-4 gap-6">
@@ -45,20 +45,20 @@ export function TopNav() {
       </nav>
 
       <div className="flex items-center gap-2">
-        {session?.user ? (
+        {isSignedIn ? (
           <Link href="/account" className="flex items-center gap-2">
             <Avatar className="h-8 w-8">
-              <AvatarImage src={session.user.image ?? ''} />
-              <AvatarFallback>{session.user.name?.[0] ?? 'U'}</AvatarFallback>
+              <AvatarImage src={user?.imageUrl ?? ''} />
+              <AvatarFallback>{user?.firstName?.[0] ?? 'U'}</AvatarFallback>
             </Avatar>
           </Link>
         ) : (
           <>
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/signin">Sign In</Link>
-            </Button>
+            <SignInButton mode="modal">
+              <Button variant="ghost" size="sm">Sign In</Button>
+            </SignInButton>
             <Button size="sm" asChild>
-              <Link href="/signup">Sign Up</Link>
+              <Link href="/sign-up">Sign Up</Link>
             </Button>
           </>
         )}
@@ -69,11 +69,11 @@ export function TopNav() {
 
 export function BottomNav() {
   const pathname = usePathname()
-  const { data: session } = useSession()
+  const { isSignedIn } = useUser()
 
-  const items = session?.user
+  const items = isSignedIn
     ? NAV_ITEMS
-    : [...NAV_ITEMS.slice(0, 3), { href: '/signin', label: 'Sign In', icon: User }]
+    : [...NAV_ITEMS.slice(0, 3), { href: '/sign-in', label: 'Sign In', icon: User }]
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex border-t bg-background/95 backdrop-blur">

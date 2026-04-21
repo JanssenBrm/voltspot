@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import LeaderboardTable from '@/components/gamification/LeaderboardTable'
 import BadgeGrid from '@/components/gamification/BadgeGrid'
-import { useSession } from 'next-auth/react'
+import { useUser } from '@clerk/nextjs'
 import { Skeleton } from '@/components/ui/skeleton'
 
 const COUNTRIES = [
@@ -21,7 +21,7 @@ const COUNTRIES = [
 ]
 
 export default function ExplorePage() {
-  const { data: session } = useSession()
+  const { user } = useUser()
   const [period, setPeriod] = useState<'alltime' | 'weekly'>('alltime')
   const [countryCode, setCountryCode] = useState('')
   const [leaderboard, setLeaderboard] = useState<any[]>([])
@@ -46,8 +46,8 @@ export default function ExplorePage() {
   }, [])
 
   useEffect(() => {
-    if (!session?.user?.id) return
-    fetch(`/api/users/${session.user.id}`)
+    if (!user?.id) return
+    fetch(`/api/users/${user.id}`)
       .then((r) => r.json())
       .then((data) => {
         const slugs = new Set<string>((data.badges ?? []).map((b: any) => b.badge?.slug).filter(Boolean))
@@ -58,7 +58,7 @@ export default function ExplorePage() {
         }
         setEarnedDates(dates)
       })
-  }, [session])
+  }, [user])
 
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-4">

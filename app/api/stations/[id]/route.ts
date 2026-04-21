@@ -44,15 +44,15 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  const { auth } = await import('@/lib/auth')
-  const session = await auth()
-  if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const { auth } = await import('@clerk/nextjs/server')
+  const { userId } = await auth()
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const [station] = await db.select().from(stations).where(eq(stations.id, params.id)).limit(1)
   if (!station) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  const isOwner = station.claimedBy === session.user.id
-  const [user] = await db.select({ role: users.role }).from(users).where(eq(users.id, session.user.id)).limit(1)
+  const isOwner = station.claimedBy === userId
+  const [user] = await db.select({ role: users.role }).from(users).where(eq(users.id, userId)).limit(1)
   const isAdmin = user?.role === 'admin'
 
   if (!isOwner && !isAdmin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
