@@ -1,3 +1,5 @@
+const SOCKET_PREFIX = 'socket:'
+
 export interface OverpassElement {
   type: 'node' | 'way' | 'relation'
   id: number
@@ -74,8 +76,8 @@ export function mapOverpassToStation(element: OverpassElement) {
   }
 
   const plugTypes = Object.entries(tags)
-    .filter(([key, value]) => key.startsWith('socket:') && value !== 'no' && value !== '0')
-    .map(([key]) => key.replace('socket:', ''))
+    .filter(([key, value]) => key.startsWith(SOCKET_PREFIX) && value !== 'no' && value !== '0')
+    .map(([key]) => key.replace(SOCKET_PREFIX, ''))
 
   const countryCode =
     tags['addr:country'] ?? tags['country_code'] ?? tags['ISO3166-1:alpha2'] ?? tags['is_in:country_code'] ?? null

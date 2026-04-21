@@ -16,7 +16,10 @@ export async function GET(req: NextRequest) {
   const dayOfMonth = new Date().getDate()
   const BATCH = 4
   const startIndex = ((dayOfMonth - 1) * BATCH) % EUROPE_COUNTRIES.length
-  const todaysCountries = [...EUROPE_COUNTRIES, ...EUROPE_COUNTRIES].slice(startIndex, startIndex + BATCH)
+  const todaysCountries = Array.from({ length: BATCH }, (_, index) => {
+    const countryIndex = (startIndex + index) % EUROPE_COUNTRIES.length
+    return EUROPE_COUNTRIES[countryIndex]
+  })
 
   const since = new Date(Date.now() - 48 * 60 * 60 * 1000)
   const results: { country: string; updated: number }[] = []
