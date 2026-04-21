@@ -14,14 +14,15 @@ export async function GET(req: NextRequest) {
   }
 
   const dayOfMonth = new Date().getDate()
-  const BATCH = 4
-  const startIndex = ((dayOfMonth - 1) * BATCH) % EUROPE_COUNTRIES.length
-  const todaysCountries = Array.from({ length: BATCH }, (_, index) => {
+  const COUNTRIES_PER_RUN = 4
+  const SYNC_LOOKBACK_HOURS = 48
+  const startIndex = ((dayOfMonth - 1) * COUNTRIES_PER_RUN) % EUROPE_COUNTRIES.length
+  const todaysCountries = Array.from({ length: COUNTRIES_PER_RUN }, (_, index) => {
     const countryIndex = (startIndex + index) % EUROPE_COUNTRIES.length
     return EUROPE_COUNTRIES[countryIndex]
   })
 
-  const since = new Date(Date.now() - 48 * 60 * 60 * 1000)
+  const since = new Date(Date.now() - SYNC_LOOKBACK_HOURS * 60 * 60 * 1000)
   const results: { country: string; updated: number }[] = []
 
   for (const { code, name } of todaysCountries) {

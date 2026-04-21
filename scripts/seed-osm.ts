@@ -16,6 +16,7 @@ async function seedCountry(code: string, name: string) {
   if (elements.length === 0) return
 
   const BATCH_SIZE = 100
+  const COUNTRY_DELAY_MS = 1500
   let count = 0
 
   for (let i = 0; i < elements.length; i += BATCH_SIZE) {
@@ -46,7 +47,7 @@ async function seedCountry(code: string, name: string) {
   }
 
   console.log(`[${code}] Done — inserted/updated ${count} stations`)
-  await new Promise((r) => setTimeout(r, 1500))
+  await new Promise((r) => setTimeout(r, COUNTRY_DELAY_MS))
 }
 
 async function main() {
