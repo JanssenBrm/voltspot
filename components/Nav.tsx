@@ -1,0 +1,98 @@
+'use client'
+
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { useSession } from 'next-auth/react'
+import { Map, Trophy, Route, User, Zap } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
+
+const NAV_ITEMS = [
+  { href: '/', label: 'Map', icon: Map },
+  { href: '/explore', label: 'Explore', icon: Trophy },
+  { href: '/routes', label: 'Routes', icon: Route },
+  { href: '/profile', label: 'Profile', icon: User },
+]
+
+export function TopNav() {
+  const pathname = usePathname()
+  const { data: session } = useSession()
+
+  return (
+    <header className="hidden md:flex fixed top-0 left-0 right-0 z-50 h-14 items-center border-b bg-background/95 backdrop-blur px-4 gap-6">
+      <Link href="/" className="flex items-center gap-2 font-bold text-lg">
+        <Zap className="h-5 w-5 text-green-500" />
+        VoltSpot
+      </Link>
+
+      <nav className="flex items-center gap-1 flex-1">
+        {NAV_ITEMS.slice(0, 3).map(({ href, label, icon: Icon }) => (
+          <Link
+            key={href}
+            href={href}
+            className={cn(
+              'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
+              pathname === href
+                ? 'bg-accent text-accent-foreground'
+                : 'text-muted-foreground hover:text-foreground hover:bg-accent/50',
+            )}
+          >
+            <Icon className="h-4 w-4" />
+            {label}
+          </Link>
+        ))}
+      </nav>
+
+      <div className="flex items-center gap-2">
+        {session?.user ? (
+          <Link href="/account" className="flex items-center gap-2">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={session.user.image ?? ''} />
+              <AvatarFallback>{session.user.name?.[0] ?? 'U'}</AvatarFallback>
+            </Avatar>
+          </Link>
+        ) : (
+          <>
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/signin">Sign In</Link>
+            </Button>
+            <Button size="sm" asChild>
+              <Link href="/signup">Sign Up</Link>
+            </Button>
+          </>
+        )}
+      </div>
+    </header>
+  )
+}
+
+export function BottomNav() {
+  const pathname = usePathname()
+  const { data: session } = useSession()
+
+  const items = session?.user
+    ? NAV_ITEMS
+    : [...NAV_ITEMS.slice(0, 3), { href: '/signin', label: 'Sign In', icon: User }]
+
+  return (
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex border-t bg-background/95 backdrop-blur">
+      {items.map(({ href, label, icon: Icon }) => {
+        const active = pathname === href || (href !== '/' && pathname.startsWith(href))
+        return (
+          <Link
+            key={href}
+            href={href}
+            className={cn(
+              'flex flex-1 flex-col items-center justify-center gap-1 py-2 text-xs transition-colors',
+              active ? 'text-green-500' : 'text-muted-foreground',
+            )}
+          >
+            <Icon className="h-5 w-5" />
+            {label}
+          </Link>
+        )
+      })}
+    </nav>
+  )
+}
