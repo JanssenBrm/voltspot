@@ -324,7 +324,7 @@ export default function VoltMap({
               })
             }
           }}
-          className="absolute bottom-32 left-3 z-20 bg-white rounded-full shadow-md p-2.5 border border-gray-200 hover:bg-gray-50 transition-colors"
+          className="absolute bottom-32 left-3 z-20 bg-card rounded-full shadow-md p-2.5 border border-border hover:bg-muted transition-colors"
           aria-label="Centre map on my location"
           title="My location"
         >
