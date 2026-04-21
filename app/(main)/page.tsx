@@ -65,7 +65,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="relative w-full h-[calc(100vh-3.5rem)] md:h-[calc(100vh-3.5rem)]" style={{ height: 'calc(100dvh - 3.5rem)' }}>
+    <div className="relative w-full h-[calc(100dvh-4rem)] md:h-[calc(100dvh-3.5rem)]">
       {/* Map */}
       <div className="absolute inset-0">
         <VoltMap
@@ -106,7 +106,7 @@ export default function HomePage() {
       {/* Add Station FAB */}
       <Button
         size="lg"
-        className="absolute bottom-6 right-4 rounded-full shadow-lg z-10 gap-2"
+        className="absolute bottom-20 right-4 md:bottom-6 rounded-full shadow-lg z-10 gap-2"
         onClick={handleAddClick}
       >
         <Plus className="h-5 w-5" />

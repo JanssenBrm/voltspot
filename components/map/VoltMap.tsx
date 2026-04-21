@@ -129,6 +129,7 @@ export default function VoltMap({
     const map = new Map({
       target: mapRef.current,
       layers: [tileLayer, clusterLayer],
+      controls: [], // disable default OL controls (zoom, attribution, rotate)
       view: new View({
         center: fromLonLat([4.4699, 50.5039]),
         zoom: 5,
@@ -201,5 +202,33 @@ export default function VoltMap({
     }
   }, [flyTo])
 
-  return <div ref={mapRef} className="w-full h-full" />
+  const handleZoom = (delta: number) => {
+    const map = mapInstance.current
+    if (!map) return
+    const view = map.getView()
+    view.animate({ zoom: (view.getZoom() ?? 5) + delta, duration: 250 })
+  }
+
+  return (
+    <div className="relative w-full h-full">
+      <div ref={mapRef} className="w-full h-full" />
+      {/* Custom zoom controls — bottom-left, above bottom nav on mobile */}
+      <div className="absolute left-3 bottom-20 md:bottom-4 flex flex-col gap-1 z-10">
+        <button
+          onClick={() => handleZoom(1)}
+          className="w-9 h-9 flex items-center justify-center rounded-md bg-background/90 backdrop-blur border border-border/60 shadow text-foreground text-lg font-bold hover:bg-accent transition-colors"
+          aria-label="Zoom in"
+        >
+          +
+        </button>
+        <button
+          onClick={() => handleZoom(-1)}
+          className="w-9 h-9 flex items-center justify-center rounded-md bg-background/90 backdrop-blur border border-border/60 shadow text-foreground text-lg font-bold hover:bg-accent transition-colors"
+          aria-label="Zoom out"
+        >
+          −
+        </button>
+      </div>
+    </div>
+  )
 }

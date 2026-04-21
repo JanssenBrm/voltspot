@@ -3,16 +3,14 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useUser, useClerk, SignInButton } from '@clerk/nextjs'
-import { Map, Trophy, Route, User, Zap } from 'lucide-react'
+import { Map, User, Zap } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 
 const NAV_ITEMS = [
   { href: '/', label: 'Map', icon: Map },
-  { href: '/explore', label: 'Explore', icon: Trophy },
-  { href: '/routes', label: 'Routes', icon: Route },
-  { href: '/profile', label: 'Profile', icon: User },
+  { href: '/account', label: 'Account', icon: User },
 ]
 
 export function TopNav() {
@@ -27,7 +25,7 @@ export function TopNav() {
       </Link>
 
       <nav className="flex items-center gap-1 flex-1">
-        {NAV_ITEMS.slice(0, 3).map(({ href, label, icon: Icon }) => (
+        {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
           <Link
             key={href}
             href={href}
@@ -73,7 +71,7 @@ export function BottomNav() {
 
   const items = isSignedIn
     ? NAV_ITEMS
-    : [...NAV_ITEMS.slice(0, 3), { href: '/sign-in', label: 'Sign In', icon: User }]
+    : [...NAV_ITEMS.slice(0, 1), { href: '/sign-in', label: 'Sign In', icon: User }]
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex border-t bg-background/95 backdrop-blur">
