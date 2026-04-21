@@ -94,7 +94,7 @@ export function mapOverpassToStation(element: OverpassElement) {
     country,
     countryCode: countryCode ? countryCode.toUpperCase() : null,
     plugTypes: plugTypes.length > 0 ? plugTypes : null,
-    isFree: tags.fee ? tags.fee !== 'yes' : null,
+    isFree: tags.fee === 'no' ? true : tags.fee === 'yes' ? false : null,
     isIndoor: tags.indoor ? tags.indoor === 'yes' : null,
     accessNotes: tags.access ?? null,
     status: 'unverified' as const,
