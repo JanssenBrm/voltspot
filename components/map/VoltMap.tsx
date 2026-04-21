@@ -11,6 +11,7 @@ import Cluster from 'ol/source/Cluster'
 import Feature from 'ol/Feature'
 import Point from 'ol/geom/Point'
 import { fromLonLat, toLonLat } from 'ol/proj'
+import type { Coordinate } from 'ol/coordinate'
 import { Circle as CircleStyle, Fill, Stroke, Style, Text } from 'ol/style'
 import 'ol/ol.css'
 
@@ -68,6 +69,22 @@ function makeClusterStyle(count: number): Style {
   })
 }
 
+const locationDotStyle = new Style({
+  image: new CircleStyle({
+    radius: 8,
+    fill: new Fill({ color: '#3B82F6' }),
+    stroke: new Stroke({ color: '#FFFFFF', width: 2.5 }),
+  }),
+})
+
+const locationAccuracyStyle = new Style({
+  image: new CircleStyle({
+    radius: 24,
+    fill: new Fill({ color: 'rgba(59, 130, 246, 0.15)' }),
+    stroke: new Stroke({ color: 'rgba(59, 130, 246, 0.4)', width: 1 }),
+  }),
+})
+
 export default function VoltMap({
   stations,
   selectedStationId,
@@ -76,10 +93,21 @@ export default function VoltMap({
   flyTo,
 }: VoltMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
+  const pulseRef = useRef<HTMLDivElement>(null)
   const mapInstance = useRef<Map | null>(null)
   const stationSourceRef = useRef<VectorSource>(new VectorSource())
+  const locationSourceRef = useRef<VectorSource>(new VectorSource())
+  const locationLayerRef = useRef(
+    new VectorLayer({
+      source: locationSourceRef.current,
+      zIndex: 999,
+    }),
+  )
+  const hasLocatedRef = useRef(false)
+  const lastCoordsRef = useRef<Coordinate | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [zoom, setZoom] = useState(5)
+  const [hasLocationFix, setHasLocationFix] = useState(false)
 
   const emitBbox = useCallback(
     (map: Map) => {
@@ -96,12 +124,20 @@ export default function VoltMap({
     [onBboxChange],
   )
 
+  const updatePulsePosition = useCallback(() => {
+    if (!mapInstance.current || !pulseRef.current || !lastCoordsRef.current) return
+    const pixel = mapInstance.current.getPixelFromCoordinate(lastCoordsRef.current)
+    if (!pixel) return
+    pulseRef.current.style.left = `${pixel[0]}px`
+    pulseRef.current.style.top = `${pixel[1]}px`
+  }, [])
+
   useEffect(() => {
     if (!mapRef.current || mapInstance.current) return
 
     const tileLayer = new TileLayer({
       source: new XYZ({
-        url: `https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/{z}/{x}/{y}?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`,
+        url: `https://api.mapbox.com/styles/v1/mapbox/light-v11/tiles/{z}/{x}/{y}?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`,
         tileSize: 512,
         maxZoom: 20,
       }),
@@ -128,7 +164,7 @@ export default function VoltMap({
 
     const map = new Map({
       target: mapRef.current,
-      layers: [tileLayer, clusterLayer],
+      layers: [tileLayer, clusterLayer, locationLayerRef.current],
       controls: [], // disable default OL controls (zoom, attribution, rotate)
       view: new View({
         center: fromLonLat([4.4699, 50.5039]),
@@ -138,21 +174,12 @@ export default function VoltMap({
 
     mapInstance.current = map
 
-    // Try geolocation
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          map.getView().animate({
-            center: fromLonLat([pos.coords.longitude, pos.coords.latitude]),
-            zoom: 12,
-            duration: 800,
-          })
-        },
-        () => {/* permission denied, keep fallback */},
-      )
+    const handleMoveEnd = () => {
+      emitBbox(map)
+      updatePulsePosition()
     }
-
-    map.on('moveend', () => emitBbox(map))
+    map.on('moveend', handleMoveEnd)
+    map.on('postrender', updatePulsePosition)
     emitBbox(map)
 
     map.on('click', (evt: any) => {
@@ -173,11 +200,62 @@ export default function VoltMap({
     })
 
     return () => {
+      map.un('moveend', handleMoveEnd)
+      map.un('postrender', updatePulsePosition)
       map.setTarget(undefined)
       mapInstance.current = null
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current)
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => {
+    if (!navigator.geolocation) return
+
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const coords = fromLonLat([position.coords.longitude, position.coords.latitude])
+        lastCoordsRef.current = coords
+
+        const source = locationSourceRef.current
+        source.clear()
+
+        const accuracyFeature = new Feature(new Point(coords))
+        accuracyFeature.setStyle(locationAccuracyStyle)
+        source.addFeature(accuracyFeature)
+
+        const dotFeature = new Feature(new Point(coords))
+        dotFeature.setStyle(locationDotStyle)
+        source.addFeature(dotFeature)
+
+        updatePulsePosition()
+
+        if (!hasLocatedRef.current && mapInstance.current) {
+          mapInstance.current.getView().animate({
+            center: coords,
+            zoom: 14,
+            duration: 800,
+          })
+          hasLocatedRef.current = true
+          setHasLocationFix(true)
+        } else {
+          setHasLocationFix(true)
+        }
+      },
+      (error) => {
+        console.warn('Geolocation unavailable:', error.message)
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 10000,
+        timeout: 10000,
+      },
+    )
+
+    return () => navigator.geolocation.clearWatch(watchId)
+  }, [updatePulsePosition])
 
   // Update features when stations change
   useEffect(() => {
@@ -212,6 +290,12 @@ export default function VoltMap({
   return (
     <div className="relative w-full h-full">
       <div ref={mapRef} className="w-full h-full" />
+      <div
+        ref={pulseRef}
+        className="location-pulse"
+        style={{ display: hasLocationFix ? 'block' : 'none' }}
+        aria-hidden="true"
+      />
       {/* Custom zoom controls — bottom-left, above bottom nav on mobile */}
       <div className="absolute left-3 bottom-20 md:bottom-4 flex flex-col gap-1 z-10">
         <button
@@ -229,6 +313,38 @@ export default function VoltMap({
           −
         </button>
       </div>
+      {hasLocationFix && (
+        <button
+          onClick={() => {
+            if (lastCoordsRef.current && mapInstance.current) {
+              mapInstance.current.getView().animate({
+                center: lastCoordsRef.current,
+                zoom: 15,
+                duration: 600,
+              })
+            }
+          }}
+          className="absolute bottom-32 left-3 z-20 bg-white rounded-full shadow-md p-2.5 border border-gray-200 hover:bg-gray-50 transition-colors"
+          aria-label="Centre map on my location"
+          title="My location"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#3B82F6"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="12" r="3" />
+            <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+            <circle cx="12" cy="12" r="8" strokeOpacity="0.3" />
+          </svg>
+        </button>
+      )}
     </div>
   )
 }

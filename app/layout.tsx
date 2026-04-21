@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import { ThemeProvider } from '@/components/providers/ThemeProvider'
 import { ClerkProvider } from '@clerk/nextjs'
 import { Toaster } from '@/components/ui/sonner'
 
@@ -17,12 +16,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider>
-      <html lang="en" suppressHydrationWarning>
+      <html lang="en">
         <body className={`${inter.variable} font-sans antialiased`}>
-          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-            {children}
-            <Toaster richColors position="top-right" />
-          </ThemeProvider>
+          {children}
+          <Toaster richColors position="top-right" />
         </body>
       </html>
     </ClerkProvider>
