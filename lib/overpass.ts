@@ -31,10 +31,15 @@ out skel qt;
 
 async function queryOverpass(query: string, attempt = 1): Promise<OverpassElement[]> {
   try {
+    const body = new URLSearchParams({ data: query }).toString()
     const res = await fetch('https://overpass-api.de/api/interpreter', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `data=${encodeURIComponent(query)}`,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        Accept: 'application/json,text/plain,*/*',
+        'User-Agent': 'voltspot-seeder/1.0 (+https://github.com/JanssenBrm/voltspot)',
+      },
+      body,
       next: { revalidate: 0 },
     })
 
@@ -46,7 +51,8 @@ async function queryOverpass(query: string, attempt = 1): Promise<OverpassElemen
     }
 
     if (!res.ok) {
-      throw new Error(`Overpass API error: ${res.status}`)
+      const errorBody = await res.text()
+      throw new Error(`Overpass API error: ${res.status}${errorBody ? ` - ${errorBody.slice(0, 240)}` : ''}`)
     }
 
     const json: { elements?: OverpassElement[] } = await res.json()
