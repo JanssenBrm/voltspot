@@ -53,48 +53,71 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const { userId } = await auth()
-  const body = await req.json()
+
+  let body: unknown
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+  }
+
   const { payload, error } = sanitizeStationPayload(body, 'create')
   if (error) return NextResponse.json({ error }, { status: 400 })
 
   let role: string | null = null
   if (userId) {
-    const [user] = await db.select({ role: users.role }).from(users).where(eq(users.id, userId)).limit(1)
-    role = user?.role ?? null
+    try {
+      const [user] = await db.select({ role: users.role }).from(users).where(eq(users.id, userId)).limit(1)
+      role = user?.role ?? null
+    } catch {
+      // Non-fatal: proceed without role (treat as unprivileged)
+    }
   }
   const privileged = canModerate(role)
 
   if (!privileged) {
-    const [request] = await db
-      .insert(stationChangeRequests)
-      .values({
-        requestType: 'create',
-        status: 'pending',
-        payload: payload as Record<string, unknown>,
-        requestedBy: userId ?? null,
-      })
-      .returning({ id: stationChangeRequests.id, status: stationChangeRequests.status })
-    return NextResponse.json({ request, queued: true }, { status: 202 })
+    try {
+      const [request] = await db
+        .insert(stationChangeRequests)
+        .values({
+          requestType: 'create',
+          status: 'pending',
+          payload: payload as Record<string, unknown>,
+          requestedBy: userId ?? null,
+        })
+        .returning({ id: stationChangeRequests.id, status: stationChangeRequests.status })
+      return NextResponse.json({ request, queued: true }, { status: 202 })
+    } catch (err) {
+      console.error('[POST /api/stations] failed to queue change request', err)
+      return NextResponse.json({ error: 'Failed to submit your station request. Please try again.' }, { status: 500 })
+    }
   }
 
-  const [station] = await db
-    .insert(stations)
-    .values({
-      name: payload.name!,
-      latitude: payload.latitude!,
-      longitude: payload.longitude!,
-      address: payload.address,
-      city: payload.city,
-      country: payload.country,
-      countryCode: payload.countryCode,
-      plugTypes: payload.plugTypes,
-      isFree: payload.isFree,
-      isIndoor: payload.isIndoor,
-      accessNotes: payload.accessNotes,
-      source: 'user',
-      status: 'unverified',
-    })
-    .returning()
+  let station: (typeof stations.$inferSelect) | undefined
+  try {
+    const [inserted] = await db
+      .insert(stations)
+      .values({
+        name: payload.name!,
+        latitude: payload.latitude!,
+        longitude: payload.longitude!,
+        address: payload.address,
+        city: payload.city,
+        country: payload.country,
+        countryCode: payload.countryCode,
+        plugTypes: payload.plugTypes,
+        isFree: payload.isFree,
+        isIndoor: payload.isIndoor,
+        accessNotes: payload.accessNotes,
+        source: 'user',
+        status: 'unverified',
+      })
+      .returning()
+    station = inserted
+  } catch (err) {
+    console.error('[POST /api/stations] failed to insert station', err)
+    return NextResponse.json({ error: 'Failed to add station. Please try again.' }, { status: 500 })
+  }
 
   if (userId) {
     await awardPoints(userId, 30)

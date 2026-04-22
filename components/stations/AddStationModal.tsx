@@ -61,8 +61,14 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
     try {
       const res = await fetch(`/api/geocode?lat=${encodeURIComponent(nextLat)}&lng=${encodeURIComponent(nextLng)}`)
       const data = await res.json()
-      if (data?.display_name) setAddress(data.display_name)
-    } catch { /**/ }
+      if (!res.ok || !data?.display_name) {
+        toast.warning('Could not resolve an address for this location. You can enter it manually.')
+      } else {
+        setAddress(data.display_name)
+      }
+    } catch {
+      toast.warning('Could not resolve an address for this location. You can enter it manually.')
+    }
     setAddressLoading(false)
   }, [])
 
@@ -187,7 +193,13 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
       onAdded()
       onClose()
     } catch (err: any) {
-      toast.error(err.message)
+      const msg: string = typeof err?.message === 'string' ? err.message : ''
+      // Provide a friendly fallback for cryptic DB/network errors
+      const friendly =
+        msg && msg !== 'Failed' && !msg.toLowerCase().includes('pattern') && !msg.toLowerCase().includes('syntax')
+          ? msg
+          : 'Failed to add station. Please check your details and try again.'
+      toast.error(friendly)
     } finally {
       setLoading(false)
     }
