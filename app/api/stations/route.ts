@@ -106,12 +106,12 @@ export async function POST(req: NextRequest) {
   // Award trail-blazer badge on first submission
   const { db: drizzleDb } = await import('@/lib/db')
   const { userBadges, badges } = await import('@/lib/db/schema')
-  const { eq: eqFn } = await import('drizzle-orm')
+  const { eq: eqFn, and: andFn } = await import('drizzle-orm')
   if (userId) {
     const existing = await drizzleDb
       .select({ badgeSlug: userBadges.badgeSlug })
       .from(userBadges)
-      .where(eqFn(userBadges.userId, userId))
+      .where(andFn(eqFn(userBadges.userId, userId), eqFn(userBadges.badgeSlug, 'trail-blazer')))
       .limit(MAX_USER_BADGES_LOOKUP)
 
     const hasTrailBlazer = existing.some((badge) => badge.badgeSlug === 'trail-blazer')

@@ -35,6 +35,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   if (action === 'approve') {
     if (changeRequest.requestType === 'create') {
+      // Re-validate at approval time in case the DB row was inserted/modified outside API constraints.
       const { payload, error } = sanitizeStationPayload(asPayload(changeRequest.payload), 'create')
       if (error) return NextResponse.json({ error }, { status: 400 })
       await db.insert(stations).values({
@@ -57,6 +58,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
     if (changeRequest.requestType === 'edit') {
       if (!changeRequest.stationId) return NextResponse.json({ error: 'Missing station' }, { status: 400 })
+      // Re-validate at approval time in case the DB row was inserted/modified outside API constraints.
       const { payload, error } = sanitizeStationPayload(asPayload(changeRequest.payload), 'edit')
       if (error) return NextResponse.json({ error }, { status: 400 })
       await db
