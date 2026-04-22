@@ -64,9 +64,21 @@ interface StationPanelProps {
 }
 
 const STATUS_CONFIG = {
-  verified: { icon: CheckCircle, color: 'text-green-500', label: 'Verified' },
-  unverified: { icon: AlertCircle, color: 'text-yellow-500', label: 'Unverified' },
-  offline: { icon: XCircle, color: 'text-red-500', label: 'Offline' },
+  verified: {
+    icon: CheckCircle,
+    label: 'Verified',
+    badgeClass: 'border-transparent bg-emerald-600 text-white',
+  },
+  unverified: {
+    icon: AlertCircle,
+    label: 'Unverified',
+    badgeClass: 'border-transparent bg-amber-500 text-white',
+  },
+  offline: {
+    icon: XCircle,
+    label: 'Offline',
+    badgeClass: 'border-transparent bg-red-600 text-white',
+  },
 }
 
 const MAX_CHECKIN_DISTANCE_METERS = 100
@@ -184,19 +196,30 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
           ) : station ? (
             <>
               {/* Status + badges */}
-              <div className="flex flex-wrap gap-2 rounded-2xl border border-border/70 bg-muted/30 p-3">
-                <span className={`flex items-center gap-1 text-sm font-medium ${statusCfg.color}`}>
+              <div className="flex flex-wrap gap-2 bg-muted/30 py-3">
+                <Badge
+                  variant="outline"
+                  className={`h-7 rounded-full gap-1.5 px-3 text-xs font-medium ${statusCfg.badgeClass}`}
+                >
                   <StatusIcon className="h-4 w-4" />
                   {statusCfg.label}
-                </span>
+                </Badge>
                 {station.isFree != null && (
-                  <Badge variant={station.isFree ? 'default' : 'secondary'} className="gap-1.5 px-2.5">
+                  <Badge
+                    variant={station.isFree ? 'default' : 'secondary'}
+                    className={station.isFree
+                      ? 'h-7 rounded-full gap-1.5 px-3 text-xs font-medium border-transparent bg-emerald-600 text-white'
+                      : 'h-7 rounded-full gap-1.5 px-3 text-xs font-medium border border-border/70 bg-secondary text-secondary-foreground'}
+                  >
                     {station.isFree ? <CircleDollarSign className="h-3 w-3" /> : <Wallet className="h-3 w-3" />}
                     {station.isFree ? 'Free to use' : 'Paid'}
                   </Badge>
                 )}
                 {station.isIndoor != null && (
-                  <Badge variant="outline" className="gap-1.5 px-2.5">
+                  <Badge
+                    variant="outline"
+                    className="h-7 rounded-full gap-1.5 px-3 text-xs font-medium border border-border/70 bg-background/80"
+                  >
                     {station.isIndoor ? <Home className="h-3 w-3" /> : <Trees className="h-3 w-3" />}
                     {station.isIndoor ? 'Indoor' : 'Outdoor'}
                   </Badge>
@@ -205,23 +228,29 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
 
               {/* Plug types */}
               {station.plugTypes?.length ? (
-                <div className="flex flex-wrap gap-1.5">
-                  {station.plugTypes.map((pt) => (
-                    <span
-                      key={pt}
-                      className={`text-xs px-2.5 py-1 rounded-xl font-medium border border-border/60 ${PLUG_COLORS[pt] ?? PLUG_COLORS.Other}`}
-                    >
-                      {PLUG_ICONS[pt] ?? '🔌'} {pt}
-                    </span>
-                  ))}
+                <div className="space-y-1.5">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/80">Plug Types</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {station.plugTypes.map((pt) => (
+                      <span
+                        key={pt}
+                        className={`text-xs px-2.5 py-1 rounded-xl font-medium border border-border/60 ${PLUG_COLORS[pt] ?? PLUG_COLORS.Other}`}
+                      >
+                        {PLUG_ICONS[pt] ?? '🔌'} {pt}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               ) : null}
 
               {/* Access notes */}
               {station.accessNotes && (
-                <p className="text-sm text-muted-foreground rounded-xl border border-border/70 bg-muted/20 px-3 py-2.5">
-                  {station.accessNotes}
-                </p>
+                <div className="space-y-1.5">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/80">Access Notes</p>
+                  <p className="text-sm text-muted-foreground rounded-xl border border-border/70 bg-muted/20 px-3 py-2.5">
+                    {station.accessNotes}
+                  </p>
+                </div>
               )}
 
               {/* Owner */}

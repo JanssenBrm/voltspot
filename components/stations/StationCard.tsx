@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { MapPin, Zap } from 'lucide-react'
+import { CircleDollarSign, MapPin, Wallet, Zap } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { PLUG_COLORS, PLUG_ICONS } from '@/lib/plugTypes'
@@ -18,9 +18,9 @@ interface StationCardProps {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  verified: 'bg-green-500/10 text-green-600 border-green-500/20',
-  unverified: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20',
-  offline: 'bg-red-500/10 text-red-600 border-red-500/20',
+  verified: 'border-transparent bg-emerald-600 text-white',
+  unverified: 'border-transparent bg-amber-500 text-white',
+  offline: 'border-transparent bg-red-600 text-white',
 }
 
 export default function StationCard({ station }: StationCardProps) {
@@ -39,17 +39,26 @@ export default function StationCard({ station }: StationCardProps) {
       </div>
 
       <div className="flex flex-wrap gap-1.5">
-        <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${statusColor}`}>
+        <Badge variant="outline" className={`h-7 rounded-full gap-1.5 px-3 text-xs font-medium ${statusColor}`}>
           {station.status ?? 'unverified'}
-        </span>
+        </Badge>
         {station.isFree != null && (
-          <Badge variant={station.isFree ? 'default' : 'secondary'} className="text-xs">
-            {station.isFree ? '🆓 Free' : '💳 Paid'}
+          <Badge
+            variant={station.isFree ? 'default' : 'secondary'}
+            className={station.isFree
+              ? 'h-7 rounded-full gap-1.5 px-3 text-xs font-medium border-transparent bg-emerald-600 text-white'
+              : 'h-7 rounded-full gap-1.5 px-3 text-xs font-medium border border-border/70 bg-secondary text-secondary-foreground'}
+          >
+            {station.isFree ? <CircleDollarSign className="h-3 w-3" /> : <Wallet className="h-3 w-3" />}
+            {station.isFree ? 'Free to use' : 'Paid'}
           </Badge>
         )}
         {station.claimedBy && (
-          <Badge variant="outline" className="text-xs text-blue-500 border-blue-500/30">
-            🔵 Claimed
+          <Badge
+            variant="outline"
+            className="h-7 rounded-full px-3 text-xs font-medium border-transparent bg-blue-600 text-white"
+          >
+            Claimed
           </Badge>
         )}
       </div>
