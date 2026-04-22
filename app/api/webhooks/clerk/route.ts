@@ -4,8 +4,6 @@ import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { users } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
-import { awardPoints } from '@/lib/points'
-import { checkAndAwardBadges } from '@/lib/badges'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,22 +28,6 @@ export async function POST(req: Request) {
     evt = wh.verify(body, { 'svix-id': svix_id, 'svix-timestamp': svix_timestamp, 'svix-signature': svix_signature })
   } catch {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
-  }
-
-  if (evt.type === 'user.created') {
-    const { id, email_addresses, first_name, last_name, image_url } = evt.data
-    const email = email_addresses?.[0]?.email_address
-    if (!email) return NextResponse.json({ ok: true })
-
-    await db.insert(users).values({
-      id,
-      email,
-      name: [first_name, last_name].filter(Boolean).join(' ') || null,
-      avatarUrl: image_url || null,
-    }).onConflictDoNothing()
-
-    await awardPoints(id, 10)
-    await checkAndAwardBadges(id)
   }
 
   if (evt.type === 'user.updated') {
