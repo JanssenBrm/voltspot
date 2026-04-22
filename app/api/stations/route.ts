@@ -9,6 +9,8 @@ import { awardPoints } from '@/lib/points'
 import { checkAndAwardBadges } from '@/lib/badges'
 import { canModerate, sanitizeStationPayload } from '@/lib/stationChangeRequests'
 
+const MAX_USER_BADGES_LOOKUP = 50
+
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl
   const bbox = searchParams.get('bbox')
@@ -110,7 +112,7 @@ export async function POST(req: NextRequest) {
       .select({ badgeSlug: userBadges.badgeSlug })
       .from(userBadges)
       .where(eqFn(userBadges.userId, userId))
-      .limit(50)
+      .limit(MAX_USER_BADGES_LOOKUP)
 
     const hasTrailBlazer = existing.some((badge) => badge.badgeSlug === 'trail-blazer')
     if (!hasTrailBlazer) {

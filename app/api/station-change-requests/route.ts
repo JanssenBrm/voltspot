@@ -5,7 +5,7 @@ import { auth } from '@clerk/nextjs/server'
 import { db } from '@/lib/db'
 import { stationChangeRequests, stations, users } from '@/lib/db/schema'
 import { desc, eq } from 'drizzle-orm'
-import { canModerate, sanitizeStationPayload, STATION_CHANGE_TYPES, type StationChangeType } from '@/lib/stationChangeRequests'
+import { canModerate, isStationChangeType, sanitizeStationPayload, type StationChangeType } from '@/lib/stationChangeRequests'
 
 export async function GET() {
   const { userId } = await auth()
@@ -36,10 +36,10 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const { userId } = await auth()
   const body = await req.json()
-  const requestType = body?.requestType as StationChangeType | undefined
+  const requestType = body?.requestType
   const stationId = typeof body?.stationId === 'string' ? body.stationId : undefined
 
-  if (!requestType || !STATION_CHANGE_TYPES.includes(requestType)) {
+  if (!isStationChangeType(requestType)) {
     return NextResponse.json({ error: 'Invalid request type' }, { status: 400 })
   }
 
@@ -49,14 +49,15 @@ export async function POST(req: NextRequest) {
     if (!station) return NextResponse.json({ error: 'Station not found' }, { status: 404 })
   }
 
-  const { payload, error } = sanitizeStationPayload(body?.payload ?? {}, requestType)
+  const typedRequestType: StationChangeType = requestType
+  const { payload, error } = sanitizeStationPayload(body?.payload ?? {}, typedRequestType)
   if (requestType !== 'delete' && error) return NextResponse.json({ error }, { status: 400 })
 
   const [created] = await db
     .insert(stationChangeRequests)
     .values({
       stationId: stationId ?? null,
-      requestType,
+      requestType: typedRequestType,
       status: 'pending',
       payload: requestType === 'delete' ? {} : (payload as Record<string, unknown>),
       requestedBy: userId ?? null,

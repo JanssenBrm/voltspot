@@ -1,9 +1,13 @@
 import { users } from '@/lib/db/schema'
 
-const MODERATOR_ROLES = new Set(['admin', 'moderator', 'approved_member'])
+const PRIVILEGED_ROLES = new Set(['admin', 'moderator', 'approved_member'])
 
 export const STATION_CHANGE_TYPES = ['create', 'edit', 'delete'] as const
 export type StationChangeType = (typeof STATION_CHANGE_TYPES)[number]
+
+export function isStationChangeType(value: unknown): value is StationChangeType {
+  return typeof value === 'string' && (STATION_CHANGE_TYPES as readonly string[]).includes(value)
+}
 
 export type SanitizedStationPayload = {
   name?: string
@@ -49,11 +53,11 @@ const parseStringArray = (value: unknown, maxItems: number, maxItemLength: numbe
 }
 
 export function canModerate(role: (typeof users.$inferSelect)['role'] | null | undefined) {
-  return !!role && MODERATOR_ROLES.has(role)
+  return !!role && PRIVILEGED_ROLES.has(role)
 }
 
-export function definedOnly<T extends Record<string, unknown>>(obj: T) {
-  return Object.fromEntries(Object.entries(obj).filter(([, value]) => value !== undefined))
+export function definedOnly<T extends Record<string, unknown>>(obj: T): Partial<T> {
+  return Object.fromEntries(Object.entries(obj).filter(([, value]) => value !== undefined)) as Partial<T>
 }
 
 export function sanitizeStationPayload(body: unknown, requestType: StationChangeType): ValidationResult {
