@@ -19,6 +19,9 @@ import 'ol/ol.css'
 interface LocationPickerMapProps {
   lat?: number
   lng?: number
+  /** Controls the map view center (pans without placing a marker) */
+  viewLat?: number
+  viewLng?: number
   onPick: (lat: number, lng: number) => void
 }
 
@@ -39,7 +42,7 @@ function isMapBrowserPointerEvent(event: unknown): event is MapBrowserEvent<Poin
     && candidate.originalEvent !== null
 }
 
-export default function LocationPickerMap({ lat, lng, onPick }: LocationPickerMapProps) {
+export default function LocationPickerMap({ lat, lng, viewLat, viewLng, onPick }: LocationPickerMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstance = useRef<Map | null>(null)
   const markerSourceRef = useRef(new VectorSource())
@@ -76,8 +79,8 @@ export default function LocationPickerMap({ lat, lng, onPick }: LocationPickerMa
       ],
       controls: [],
       view: new View({
-        center: fromLonLat([lng ?? 4.4699, lat ?? 50.5039]),
-        zoom: lat != null && lng != null ? 14 : 5,
+        center: fromLonLat([viewLng ?? lng ?? 4.4699, viewLat ?? lat ?? 50.5039]),
+        zoom: (viewLat ?? lat) != null && (viewLng ?? lng) != null ? 14 : 5,
       }),
     })
 
@@ -105,6 +108,15 @@ export default function LocationPickerMap({ lat, lng, onPick }: LocationPickerMa
       duration: 250,
     })
   }, [lat, lng])
+
+  useEffect(() => {
+    if (viewLat == null || viewLng == null || !mapInstance.current) return
+    mapInstance.current.getView().animate({
+      center: fromLonLat([viewLng, viewLat]),
+      zoom: 14,
+      duration: 400,
+    })
+  }, [viewLat, viewLng])
 
   return (
     <div

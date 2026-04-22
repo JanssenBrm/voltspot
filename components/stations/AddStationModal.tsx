@@ -50,6 +50,8 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
   const [addressLoading, setAddressLoading] = useState(false)
   const [locating, setLocating] = useState(false)
   const [showMapPicker, setShowMapPicker] = useState(false)
+  const [mapViewLat, setMapViewLat] = useState<number | undefined>()
+  const [mapViewLng, setMapViewLng] = useState<number | undefined>()
   const fileRef = useRef<HTMLInputElement>(null)
   const brandOptions = useMemo(() => [...BIKE_BRAND_OPTIONS, ...customBrands], [customBrands])
 
@@ -64,49 +66,52 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
     setAddressLoading(false)
   }, [])
 
-  const geocodeAddress = useCallback(async () => {
-    if (!address.trim()) return
-    setAddressLoading(true)
-    try {
-      const res = await fetch(`/api/geocode?q=${encodeURIComponent(address)}`)
-      const data = await res.json()
-      if (data?.lat && data?.lon) {
-        setLat(data.lat)
-        setLng(data.lon)
-      }
-    } catch { /**/ }
-    setAddressLoading(false)
-  }, [address])
-
   const setCoordinates = useCallback((nextLat: string, nextLng: string) => {
     setLat(nextLat)
     setLng(nextLng)
     void reverseGeocode(nextLat, nextLng)
   }, [reverseGeocode])
 
-  const useCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      toast.error('Geolocation is not supported on this device')
-      return
-    }
+  const getBrowserLocation = useCallback((): Promise<GeolocationCoordinates> => {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error('not-supported'))
+        return
+      }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => resolve(pos.coords),
+        (err) => reject(err),
+        { timeout: 15000 },
+      )
+    })
+  }, [])
+
+  const useCurrentLocation = async () => {
     setLocating(true)
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setLocating(false)
-        setCoordinates(
-          String(position.coords.latitude),
-          String(position.coords.longitude),
-        )
-      },
-      () => {
-        setLocating(false)
+    try {
+      const coords = await getBrowserLocation()
+      setCoordinates(String(coords.latitude), String(coords.longitude))
+    } catch (err: any) {
+      if (err?.message === 'not-supported') {
+        toast.error('Geolocation is not supported on this device')
+      } else {
         toast.error('Unable to access your current location')
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 5000,
-      },
-    )
+      }
+    } finally {
+      setLocating(false)
+    }
+  }
+
+  const openMapPicker = async () => {
+    const isOpening = !showMapPicker
+    setShowMapPicker(isOpening)
+    if (!isOpening) return
+    // Attempt to zoom map to user's location when opening
+    try {
+      const coords = await getBrowserLocation()
+      setMapViewLat(coords.latitude)
+      setMapViewLng(coords.longitude)
+    } catch { /**/ }
   }
 
   const handleMapPick = useCallback((pickedLat: number, pickedLng: number) => {
@@ -211,7 +216,7 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
                 <Navigation className="h-4 w-4 mr-1.5" />
                 {locating ? 'Locating...' : 'Use my location'}
               </Button>
-              <Button type="button" variant="outline" onClick={() => setShowMapPicker((v) => !v)}>
+              <Button type="button" variant="outline" onClick={openMapPicker}>
                 <MapPin className="h-4 w-4 mr-1.5" />
                 {showMapPicker ? 'Hide map picker' : 'Drop a pin on map'}
               </Button>
@@ -224,39 +229,27 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
                 <LocationPickerMap
                   lat={lat ? Number(lat) : undefined}
                   lng={lng ? Number(lng) : undefined}
+                  viewLat={mapViewLat}
+                  viewLng={mapViewLng}
                   onPick={handleMapPick}
                 />
               </div>
             )}
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label>Latitude *</Label>
-                <div className="h-10 rounded-xl border bg-background px-3 py-2 text-sm text-foreground">
-                  {lat || 'Not selected yet'}
-                </div>
-              </div>
-              <div className="space-y-1">
-                <Label>Longitude *</Label>
-                <div className="h-10 rounded-xl border bg-background px-3 py-2 text-sm text-foreground">
-                  {lng || 'Not selected yet'}
-                </div>
-              </div>
-            </div>
+            {(lat || lng) && (
+              <p className="text-xs text-muted-foreground">
+                Location selected ✓
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
             <Label>Address</Label>
-            <div className="flex gap-2">
-              <Input
-                className="rounded-xl"
-                placeholder={addressLoading ? 'Resolving address...' : 'Address is derived from selected location'}
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-              />
-              <Button aria-label="Geocode address" variant="outline" size="sm" onClick={geocodeAddress} disabled={addressLoading}>
-                {addressLoading ? '...' : '📍'}
-              </Button>
-            </div>
+            <Input
+              className="rounded-xl"
+              placeholder={addressLoading ? 'Resolving address...' : 'Address is derived from selected location'}
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+            />
           </div>
 
           <div className="space-y-3 rounded-2xl border border-border/70 p-4 bg-muted/20">
