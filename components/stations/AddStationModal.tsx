@@ -175,8 +175,13 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
           accessNotes: accessNotes || undefined,
         }),
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Failed')
+      let data: { error?: string; station?: { id: string }; queued?: boolean } = {}
+      try {
+        data = await res.json()
+      } catch {
+        throw new Error('Failed to add station. Please try again.')
+      }
+      if (!res.ok) throw new Error(data.error ?? 'Failed to add station. Please try again.')
 
       // Upload photos
       if (photos.length && data.station?.id) {
@@ -193,13 +198,7 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
       onAdded()
       onClose()
     } catch (err: any) {
-      const msg: string = typeof err?.message === 'string' ? err.message : ''
-      // Provide a friendly fallback for cryptic DB/network errors
-      const friendly =
-        msg && msg !== 'Failed' && !msg.toLowerCase().includes('pattern') && !msg.toLowerCase().includes('syntax')
-          ? msg
-          : 'Failed to add station. Please check your details and try again.'
-      toast.error(friendly)
+      toast.error(err?.message || 'Failed to add station. Please try again.')
     } finally {
       setLoading(false)
     }
