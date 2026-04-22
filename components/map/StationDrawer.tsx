@@ -12,7 +12,10 @@ interface StationDrawerProps {
 export default function StationDrawer({ stationId, onClose, userId }: StationDrawerProps) {
   return (
     <Sheet open={!!stationId} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent side="bottom" className="h-[75vh] p-0 rounded-t-xl">
+      <SheetContent
+        side="bottom"
+        className="h-[78vh] p-0 rounded-t-3xl border-x border-t border-border/70 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/90"
+      >
         {stationId && (
           <StationPanel stationId={stationId} onClose={onClose} userId={userId} />
         )}
