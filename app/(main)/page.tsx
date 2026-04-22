@@ -106,7 +106,7 @@ export default function HomePage() {
       {/* Add Station FAB */}
       <Button
         size="lg"
-        className="absolute bottom-24 right-4 md:bottom-6 rounded-2xl md:rounded-full shadow-lg z-20 gap-2 h-14 w-14 md:h-10 md:w-auto p-0 md:px-3"
+        className="absolute bottom-[5.25rem] right-2.5 md:bottom-6 md:right-4 rounded-full shadow-lg z-20 gap-2 h-14 w-14 md:h-10 md:w-auto p-0 md:px-3"
         onClick={handleAddClick}
       >
         <Plus className="h-6 w-6 md:h-5 md:w-5" />
