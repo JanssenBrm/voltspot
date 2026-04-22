@@ -12,6 +12,7 @@ import {
   XCircle,
   ExternalLink,
   Edit,
+  Trash2,
   Home,
   Trees,
   CircleDollarSign,
@@ -28,6 +29,7 @@ import CheckInModal from '@/components/stations/CheckInModal'
 import ClaimButton from '@/components/stations/ClaimButton'
 import Image from 'next/image'
 import Link from 'next/link'
+import { toast } from 'sonner'
 
 interface StationDetail {
   id: string
@@ -155,6 +157,44 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
     fetch(`/api/stations/${stationId}`)
       .then((r) => r.json())
       .then(setStation)
+  }
+
+  const suggestEdit = async () => {
+    const suggestion = window.prompt('Describe your edit suggestion for this station')
+    if (!suggestion?.trim()) return
+
+    const res = await fetch(`/api/stations/${stationId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accessNotes: suggestion.trim() }),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      toast.error(data.error ?? 'Could not submit edit suggestion')
+      return
+    }
+    if (res.status === 202) {
+      toast.success('Edit suggestion submitted for review')
+      return
+    }
+    toast.success('Station updated')
+    refresh()
+  }
+
+  const requestRemoval = async () => {
+    if (!window.confirm('Request removal of this station?')) return
+    const res = await fetch(`/api/stations/${stationId}`, { method: 'DELETE' })
+    const data = await res.json()
+    if (!res.ok) {
+      toast.error(data.error ?? 'Could not request removal')
+      return
+    }
+    if (res.status === 202) {
+      toast.success('Removal request submitted for review')
+      return
+    }
+    toast.success('Station deleted')
+    onClose()
   }
 
   return (
@@ -329,14 +369,15 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
                   </Button>
                 </div>
 
-                {userId === station.claimedBy && (
-                  <Button variant="ghost" size="sm" className="rounded-xl p-4" asChild>
-                    <Link href={`/stations/${station.id}?edit=1`}>
-                      <Edit className="h-3 w-3 mr-1" />
-                      Edit Station
-                    </Link>
-                  </Button>
-                )}
+                <Button variant="ghost" size="sm" className="rounded-xl p-4" onClick={suggestEdit}>
+                  <Edit className="h-3 w-3 mr-1" />
+                  Suggest Edit
+                </Button>
+
+                <Button variant="ghost" size="sm" className="rounded-xl p-4 text-destructive hover:text-destructive" onClick={requestRemoval}>
+                  <Trash2 className="h-3 w-3 mr-1" />
+                  Request Removal
+                </Button>
               </div>
 
               {/* Check-ins */}

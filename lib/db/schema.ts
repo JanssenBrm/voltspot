@@ -6,6 +6,7 @@ import {
   doublePrecision,
   boolean,
   integer,
+  jsonb,
   unique,
 } from 'drizzle-orm/pg-core'
 
@@ -84,6 +85,20 @@ export const routes = pgTable('routes', {
   createdAt: timestamp('created_at').defaultNow(),
 })
 
+export const stationChangeRequests = pgTable('station_change_requests', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  stationId: uuid('station_id').references(() => stations.id),
+  requestType: text('request_type').notNull(),
+  status: text('status').default('pending').notNull(),
+  payload: jsonb('payload').$type<Record<string, unknown>>(),
+  requestedBy: text('requested_by').references(() => users.id),
+  reviewedBy: text('reviewed_by').references(() => users.id),
+  reviewNote: text('review_note'),
+  reviewedAt: timestamp('reviewed_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
+
 export const leaderboardSnapshots = pgTable('leaderboard_snapshots', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: text('user_id').references(() => users.id).notNull(),
@@ -100,3 +115,4 @@ export type CheckIn = typeof checkIns.$inferSelect
 export type Badge = typeof badges.$inferSelect
 export type UserBadge = typeof userBadges.$inferSelect
 export type Route = typeof routes.$inferSelect
+export type StationChangeRequest = typeof stationChangeRequests.$inferSelect

@@ -179,7 +179,11 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
         await fetch(`/api/stations/${data.station.id}/photos`, { method: 'POST', body: fd })
       }
 
-      toast.success('Station added! +30 points ⚡')
+      if (res.status === 202) {
+        toast.success('Thanks! Your station request was submitted for review.')
+      } else {
+        toast.success('Station added! +30 points ⚡')
+      }
       onAdded()
       onClose()
     } catch (err: any) {

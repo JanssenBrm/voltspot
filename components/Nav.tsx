@@ -3,13 +3,14 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useUser, useClerk, SignInButton } from '@clerk/nextjs'
-import { Map, User, Zap } from 'lucide-react'
+import { Map, ShieldCheck, User, Zap } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 
 const NAV_ITEMS = [
   { href: '/', label: 'Map', icon: Map },
+  { href: '/moderation', label: 'Moderation', icon: ShieldCheck },
   { href: '/account', label: 'Account', icon: User },
 ]
 

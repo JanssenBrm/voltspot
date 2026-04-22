@@ -2,11 +2,12 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { stations } from '@/lib/db/schema'
+import { stations, stationChangeRequests, users } from '@/lib/db/schema'
 import { sql, and, gte, lte, eq } from 'drizzle-orm'
 import { auth } from '@clerk/nextjs/server'
 import { awardPoints } from '@/lib/points'
 import { checkAndAwardBadges } from '@/lib/badges'
+import { canModerate, sanitizeStationPayload } from '@/lib/stationChangeRequests'
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl
@@ -52,56 +53,73 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const { userId } = await auth()
-  if (!userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
   const body = await req.json()
-  const { name, latitude, longitude, address, city, country, countryCode, plugTypes, isFree, isIndoor, accessNotes } = body
+  const { payload, error } = sanitizeStationPayload(body, 'create')
+  if (error) return NextResponse.json({ error }, { status: 400 })
 
-  if (!name || latitude == null || longitude == null) {
-    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+  let role: string | null = null
+  if (userId) {
+    const [user] = await db.select({ role: users.role }).from(users).where(eq(users.id, userId)).limit(1)
+    role = user?.role ?? null
+  }
+  const privileged = canModerate(role)
+
+  if (!privileged) {
+    const [request] = await db
+      .insert(stationChangeRequests)
+      .values({
+        requestType: 'create',
+        status: 'pending',
+        payload: payload as Record<string, unknown>,
+        requestedBy: userId ?? null,
+      })
+      .returning({ id: stationChangeRequests.id, status: stationChangeRequests.status })
+    return NextResponse.json({ request, queued: true }, { status: 202 })
   }
 
   const [station] = await db
     .insert(stations)
     .values({
-      name,
-      latitude,
-      longitude,
-      address,
-      city,
-      country,
-      countryCode,
-      plugTypes,
-      isFree,
-      isIndoor,
-      accessNotes,
+      name: payload.name!,
+      latitude: payload.latitude!,
+      longitude: payload.longitude!,
+      address: payload.address,
+      city: payload.city,
+      country: payload.country,
+      countryCode: payload.countryCode,
+      plugTypes: payload.plugTypes,
+      isFree: payload.isFree,
+      isIndoor: payload.isIndoor,
+      accessNotes: payload.accessNotes,
       source: 'user',
       status: 'unverified',
     })
     .returning()
 
-  await awardPoints(userId, 30)
-  const newBadges = await checkAndAwardBadges(userId)
+  if (userId) {
+    await awardPoints(userId, 30)
+  }
+  const newBadges = userId ? await checkAndAwardBadges(userId) : []
 
   // Award trail-blazer badge on first submission
   const { db: drizzleDb } = await import('@/lib/db')
   const { userBadges, badges } = await import('@/lib/db/schema')
   const { eq: eqFn } = await import('drizzle-orm')
-  const [existing] = await drizzleDb
-    .select()
-    .from(userBadges)
-    .where(eqFn(userBadges.userId, userId))
-    .limit(50)
+  if (userId) {
+    const [existing] = await drizzleDb
+      .select()
+      .from(userBadges)
+      .where(eqFn(userBadges.userId, userId))
+      .limit(50)
 
-  const hasTrailBlazer = existing && (existing as any).badgeSlug === 'trail-blazer'
-  if (!hasTrailBlazer) {
-    try {
-      await drizzleDb.insert(userBadges).values({ userId, badgeSlug: 'trail-blazer' })
-      const [trailBadge] = await drizzleDb.select().from(badges).where(eqFn(badges.slug, 'trail-blazer')).limit(1)
-      if (trailBadge) await awardPoints(userId, trailBadge.pointsValue ?? 0)
-    } catch { /* already has it */ }
+    const hasTrailBlazer = existing && (existing as any).badgeSlug === 'trail-blazer'
+    if (!hasTrailBlazer) {
+      try {
+        await drizzleDb.insert(userBadges).values({ userId, badgeSlug: 'trail-blazer' })
+        const [trailBadge] = await drizzleDb.select().from(badges).where(eqFn(badges.slug, 'trail-blazer')).limit(1)
+        if (trailBadge) await awardPoints(userId, trailBadge.pointsValue ?? 0)
+      } catch { /* already has it */ }
+    }
   }
 
   return NextResponse.json({ station, newBadges }, { status: 201 })
