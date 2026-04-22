@@ -69,12 +69,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
     if (changeRequest.requestType === 'delete') {
       if (!changeRequest.stationId) return NextResponse.json({ error: 'Missing station' }, { status: 400 })
-      await db
-        .update(stationChangeRequests)
-        .set({ stationId: null, updatedAt: new Date() })
-        .where(eq(stationChangeRequests.stationId, changeRequest.stationId))
-      await db.delete(checkIns).where(eq(checkIns.stationId, changeRequest.stationId))
-      await db.delete(stations).where(eq(stations.id, changeRequest.stationId))
+      await db.transaction(async (tx) => {
+        await tx
+          .update(stationChangeRequests)
+          .set({ stationId: null, updatedAt: new Date() })
+          .where(eq(stationChangeRequests.stationId, changeRequest.stationId!))
+        await tx.delete(checkIns).where(eq(checkIns.stationId, changeRequest.stationId!))
+        await tx.delete(stations).where(eq(stations.id, changeRequest.stationId!))
+      })
     }
   }
 
