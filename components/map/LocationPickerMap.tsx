@@ -8,8 +8,10 @@ import OSM from 'ol/source/OSM'
 import VectorLayer from 'ol/layer/Vector'
 import VectorSource from 'ol/source/Vector'
 import Feature from 'ol/Feature'
+import { unByKey } from 'ol/Observable'
 import Point from 'ol/geom/Point'
 import { fromLonLat, toLonLat } from 'ol/proj'
+import type { Coordinate } from 'ol/coordinate'
 import { Circle as CircleStyle, Fill, Stroke, Style } from 'ol/style'
 import type MapBrowserEvent from 'ol/MapBrowserEvent'
 import 'ol/ol.css'
@@ -28,6 +30,12 @@ const pinStyle = new Style({
   }),
 })
 
+function isMapBrowserPointerEvent(event: unknown): event is MapBrowserEvent<PointerEvent> {
+  return typeof event === 'object'
+    && event !== null
+    && 'coordinate' in event
+}
+
 export default function LocationPickerMap({ lat, lng, onPick }: LocationPickerMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstance = useRef<Map | null>(null)
@@ -39,7 +47,7 @@ export default function LocationPickerMap({ lat, lng, onPick }: LocationPickerMa
     onPickRef.current = onPick
   }, [onPick])
 
-  const setMarkerAtCoordinate = (coordinate: number[]) => {
+  const setMarkerAtCoordinate = (coordinate: Coordinate) => {
     const point = new Point(coordinate)
     if (!markerFeatureRef.current) {
       markerFeatureRef.current = new Feature(point)
@@ -70,17 +78,16 @@ export default function LocationPickerMap({ lat, lng, onPick }: LocationPickerMa
       }),
     })
 
-    const clickHandler = (event: MapBrowserEvent<MouseEvent>) => {
+    const clickKey = map.on('click', (event) => {
+      if (!isMapBrowserPointerEvent(event)) return
       const [pickedLng, pickedLat] = toLonLat(event.coordinate)
       setMarkerAtCoordinate(event.coordinate)
       onPickRef.current(pickedLat, pickedLng)
-    }
-
-    map.on('click', clickHandler)
+    })
     mapInstance.current = map
 
     return () => {
-      map.un('click', clickHandler)
+      unByKey(clickKey)
       map.setTarget(undefined)
       mapInstance.current = null
     }
