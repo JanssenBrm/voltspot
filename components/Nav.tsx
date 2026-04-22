@@ -53,9 +53,15 @@ export function TopNav() {
         ) : (
           <>
             <SignInButton mode="modal">
-              <Button variant="ghost" size="sm">Sign In</Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="rounded-full border border-border/70 p-4 hover:border-border hover:bg-accent/70"
+              >
+                Sign In
+              </Button>
             </SignInButton>
-            <Button size="sm" asChild>
+            <Button size="sm" className="rounded-full p-4 shadow-md hover:shadow-lg" asChild>
               <Link href="/sign-up">Sign Up</Link>
             </Button>
           </>
