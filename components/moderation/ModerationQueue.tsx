@@ -29,7 +29,7 @@ export default function ModerationQueue() {
       if (!res.ok) throw new Error(data.error ?? 'Failed to load requests')
       setItems(data)
     } catch (err: any) {
-      toast.error(err.message ?? 'Failed to load requests')
+      toast.error(err.message ?? 'Failed to load requests. Please check your permissions and network connection.')
     } finally {
       setLoading(false)
     }

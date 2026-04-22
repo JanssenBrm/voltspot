@@ -112,7 +112,7 @@ export async function POST(req: NextRequest) {
       .where(andFn(eqFn(userBadges.userId, userId), eqFn(userBadges.badgeSlug, 'trail-blazer')))
       .limit(1)
 
-    const hasTrailBlazer = existing.some((badge) => badge.badgeSlug === 'trail-blazer')
+    const hasTrailBlazer = existing.length > 0
     if (!hasTrailBlazer) {
       try {
         await drizzleDb.insert(userBadges).values({ userId, badgeSlug: 'trail-blazer' })
