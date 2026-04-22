@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   }
 }
 
-const STATUS_CONFIG: Record<string, { icon: any; color: string; label: string }> = {
+const STATUS_CONFIG: Record<string, { icon: any; badgeClass: string; label: string }> = {
   verified: {
     icon: CheckCircle,
     label: 'Verified',
