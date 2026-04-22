@@ -31,9 +31,12 @@ const pinStyle = new Style({
 })
 
 function isMapBrowserPointerEvent(event: unknown): event is MapBrowserEvent<PointerEvent> {
+  const candidate = event as { coordinate?: unknown; originalEvent?: unknown } | null
   return typeof event === 'object'
     && event !== null
-    && 'coordinate' in event
+    && Array.isArray(candidate?.coordinate)
+    && typeof candidate.originalEvent === 'object'
+    && candidate.originalEvent !== null
 }
 
 export default function LocationPickerMap({ lat, lng, onPick }: LocationPickerMapProps) {
