@@ -26,7 +26,7 @@ export function TopNav() {
       </Link>
 
       <nav className="flex items-center gap-1 flex-1">
-        {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
+        {NAV_ITEMS.filter(({ href }) => isSignedIn || (href !== '/moderation' && href !== '/account')).map(({ href, label, icon: Icon }) => (
           <Link
             key={href}
             href={href}
