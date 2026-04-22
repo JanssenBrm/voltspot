@@ -82,8 +82,12 @@ export function sanitizeStationPayload(body: unknown, requestType: StationChange
   }
 
   if (requestType === 'create') {
-    if (!payload.name || payload.latitude == null || payload.longitude == null) {
-      return { payload, error: 'Missing required fields' }
+    const missing: string[] = []
+    if (!payload.name) missing.push('station name')
+    if (payload.latitude == null) missing.push('latitude')
+    if (payload.longitude == null) missing.push('longitude')
+    if (missing.length) {
+      return { payload, error: `Missing required fields: ${missing.join(', ')}` }
     }
   }
 

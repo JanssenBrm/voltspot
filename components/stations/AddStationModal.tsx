@@ -151,8 +151,12 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
   }
 
   const submit = async () => {
-    if (!name.trim() || !lat || !lng) {
-      toast.error('Name and location are required')
+    if (!name.trim()) {
+      toast.error('Please enter a station name')
+      return
+    }
+    if (!lat || !lng) {
+      toast.error('Please select a location — use "Use my location" or drop a pin on the map')
       return
     }
     const compatibilityOptions = supportsAllBrands
