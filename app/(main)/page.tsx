@@ -31,6 +31,17 @@ export default function HomePage() {
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS)
   const [flyTo, setFlyTo] = useState<[number, number] | null>(null)
   const [addOpen, setAddOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 767px)')
+    const updateIsMobile = () => setIsMobile(mediaQuery.matches)
+
+    updateIsMobile()
+    mediaQuery.addEventListener('change', updateIsMobile)
+
+    return () => mediaQuery.removeEventListener('change', updateIsMobile)
+  }, [])
 
   const fetchStations = useCallback(async (currentBbox: string, currentFilters: Filters) => {
     const params = new URLSearchParams({ bbox: currentBbox })
@@ -95,13 +106,13 @@ export default function HomePage() {
       )}
 
       {/* Station drawer — mobile bottom sheet */}
-      <div className="md:hidden">
+      {isMobile && (
         <StationDrawer
           stationId={selectedStation?.id ?? null}
           onClose={() => setSelectedStation(null)}
           userId={user?.id ?? null}
         />
-      </div>
+      )}
 
       {/* Add Station FAB */}
       <Button
