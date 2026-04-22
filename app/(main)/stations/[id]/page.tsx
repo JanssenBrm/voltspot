@@ -2,9 +2,20 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { MapPin, Navigation, Star, CheckCircle, AlertCircle, XCircle, Flag } from 'lucide-react'
+import {
+  MapPin,
+  Navigation,
+  Star,
+  CheckCircle,
+  AlertCircle,
+  XCircle,
+  Flag,
+  Home,
+  Trees,
+  CircleDollarSign,
+  Wallet,
+} from 'lucide-react'
 import { PLUG_COLORS, PLUG_ICONS } from '@/lib/plugTypes'
-import Link from 'next/link'
 import Image from 'next/image'
 
 async function getStation(id: string) {
@@ -37,8 +48,11 @@ export default async function StationDetailPage({ params }: { params: { id: stri
   const StatusIcon = statusCfg.icon
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
   const mapImageUrl = mapboxToken
-    ? `https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/pin-s+22c55e(${station.longitude},${station.latitude})/${station.longitude},${station.latitude},14,0/600x300?access_token=${mapboxToken}`
+    ? `https://api.mapbox.com/styles/v1/mapbox/light-v11/static/pin-s+22c55e(${station.longitude},${station.latitude})/${station.longitude},${station.latitude},14,0/600x300?access_token=${mapboxToken}`
     : null
+  const locationLabel =
+    [station.address, station.city, station.country].filter(Boolean).join(', ') ||
+    `${station.latitude.toFixed(4)}, ${station.longitude.toFixed(4)}`
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -65,43 +79,50 @@ export default async function StationDetailPage({ params }: { params: { id: stri
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <div className="max-w-2xl mx-auto p-4 space-y-6">
+      <div className="mx-auto max-w-3xl p-4 md:p-6 space-y-6">
         {/* Map thumbnail */}
         {mapImageUrl && (
-          <div className="relative aspect-video rounded-xl overflow-hidden bg-muted">
+          <div className="relative aspect-video overflow-hidden rounded-2xl border border-border/70 bg-muted shadow-sm">
             <Image src={mapImageUrl} alt="Station map" fill className="object-cover" />
           </div>
         )}
 
-        <div className="space-y-2">
-          <h1 className="text-2xl font-bold">{station.name}</h1>
-          <p className="flex items-center gap-1 text-muted-foreground">
+        <div className="space-y-2 rounded-2xl border border-border/70 bg-card p-5">
+          <h1 className="text-2xl font-semibold tracking-tight">{station.name}</h1>
+          <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
             <MapPin className="h-4 w-4" />
-            {[station.address, station.city, station.country].filter(Boolean).join(', ')}
+            {locationLabel}
           </p>
         </div>
 
         {/* Status + badges */}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 rounded-2xl border border-border/70 bg-muted/30 p-3">
           <span className={`flex items-center gap-1 font-medium ${statusCfg.color}`}>
             <StatusIcon className="h-4 w-4" />
             {statusCfg.label}
           </span>
           {station.isFree != null && (
-            <Badge variant={station.isFree ? 'default' : 'secondary'}>
-              {station.isFree ? '🆓 Free' : '💳 Paid'}
+            <Badge variant={station.isFree ? 'default' : 'secondary'} className="gap-1.5 px-2.5">
+              {station.isFree ? <CircleDollarSign className="h-3 w-3" /> : <Wallet className="h-3 w-3" />}
+              {station.isFree ? 'Free to use' : 'Paid'}
             </Badge>
           )}
           {station.isIndoor != null && (
-            <Badge variant="outline">{station.isIndoor ? '🏠 Indoor' : '🌤 Outdoor'}</Badge>
+            <Badge variant="outline" className="gap-1.5 px-2.5">
+              {station.isIndoor ? <Home className="h-3 w-3" /> : <Trees className="h-3 w-3" />}
+              {station.isIndoor ? 'Indoor' : 'Outdoor'}
+            </Badge>
           )}
         </div>
 
         {/* Plug types */}
         {station.plugTypes?.length ? (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             {station.plugTypes.map((pt: string) => (
-              <span key={pt} className={`text-sm px-3 py-1 rounded-full font-medium ${PLUG_COLORS[pt] ?? PLUG_COLORS.Other}`}>
+              <span
+                key={pt}
+                className={`text-xs px-2.5 py-1 rounded-xl border border-border/60 font-medium ${PLUG_COLORS[pt] ?? PLUG_COLORS.Other}`}
+              >
                 {PLUG_ICONS[pt] ?? '🔌'} {pt}
               </span>
             ))}
@@ -109,7 +130,9 @@ export default async function StationDetailPage({ params }: { params: { id: stri
         ) : null}
 
         {station.accessNotes && (
-          <p className="text-muted-foreground border-l-2 border-border pl-3">{station.accessNotes}</p>
+          <p className="rounded-xl border border-border/70 bg-muted/20 px-3 py-2.5 text-sm text-muted-foreground">
+            {station.accessNotes}
+          </p>
         )}
 
         {/* Owner */}
@@ -121,8 +144,8 @@ export default async function StationDetailPage({ params }: { params: { id: stri
         )}
 
         {/* Actions */}
-        <div className="flex flex-wrap gap-2">
-          <Button asChild>
+        <div>
+          <Button className="h-10 rounded-xl px-4 shadow-sm hover:shadow" asChild>
             <a
               href={`https://www.google.com/maps/dir/?api=1&destination=${station.latitude},${station.longitude}`}
               target="_blank"
@@ -132,16 +155,13 @@ export default async function StationDetailPage({ params }: { params: { id: stri
               Get Directions
             </a>
           </Button>
-          <Button variant="outline" asChild>
-            <Link href={`/routes/new?station=${station.id}`}>Plan a Route Through Here</Link>
-          </Button>
         </div>
 
         {/* Photos */}
         {station.photos?.length ? (
           <div className="grid grid-cols-2 gap-2">
             {station.photos.map((url: string, i: number) => (
-              <div key={i} className="relative aspect-video rounded-lg overflow-hidden bg-muted">
+              <div key={i} className="relative aspect-video overflow-hidden rounded-xl border border-border/60 bg-muted">
                 <Image src={url} alt={`Photo ${i + 1}`} fill className="object-cover" />
               </div>
             ))}
@@ -153,7 +173,7 @@ export default async function StationDetailPage({ params }: { params: { id: stri
           <h2 className="font-semibold text-lg">Check-ins</h2>
           {station.recentCheckIns?.length ? (
             station.recentCheckIns.map((ci: any) => (
-              <div key={ci.id} className="rounded-xl bg-muted/50 p-4 space-y-2">
+              <div key={ci.id} className="rounded-xl border border-border/60 bg-card p-4 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="font-medium text-sm">{ci.userName ?? 'Anonymous'}</span>
                   {ci.rating && (
