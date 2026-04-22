@@ -20,7 +20,7 @@ export function TopNav() {
   return (
     <header className="hidden md:flex fixed top-0 left-0 right-0 z-50 h-14 items-center border-b bg-background/95 backdrop-blur px-4 gap-6">
       <Link href="/" className="flex items-center gap-2 font-bold text-lg">
-        <Zap className="h-5 w-5 text-green-500" />
+        <Zap className="h-5 w-5 text-primary" />
         VoltSpot
       </Link>
 
@@ -83,7 +83,7 @@ export function BottomNav() {
             href={href}
             className={cn(
               'flex flex-1 flex-col items-center justify-center gap-1 py-2 text-xs transition-colors',
-              active ? 'text-green-500' : 'text-muted-foreground',
+              active ? 'text-primary' : 'text-muted-foreground',
             )}
           >
             <Icon className="h-5 w-5" />
