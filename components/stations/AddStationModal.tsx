@@ -212,11 +212,11 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
               Choose your location and we&apos;ll fill in the address automatically.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <Button type="button" variant="outline" onClick={useCurrentLocation} disabled={locating}>
+              <Button type="button" variant="outline" className="h-11 px-5 rounded-xl" onClick={useCurrentLocation} disabled={locating}>
                 <Navigation className="h-4 w-4 mr-1.5" />
                 {locating ? 'Locating...' : 'Use my location'}
               </Button>
-              <Button type="button" variant="outline" onClick={openMapPicker}>
+              <Button type="button" variant="outline" className="h-11 px-5 rounded-xl" onClick={openMapPicker}>
                 <MapPin className="h-4 w-4 mr-1.5" />
                 {showMapPicker ? 'Hide map picker' : 'Drop a pin on map'}
               </Button>
@@ -245,7 +245,7 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
           <div className="space-y-2">
             <Label>Address</Label>
             <Input
-              className="rounded-xl"
+              className="h-11 rounded-xl px-4"
               placeholder={addressLoading ? 'Resolving address...' : 'Address is derived from selected location'}
               value={address}
               onChange={(e) => setAddress(e.target.value)}
@@ -280,9 +280,9 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
                     </div>
                   ))}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 mt-1">
                   <Input
-                    className="rounded-xl"
+                    className="h-11 rounded-xl px-4"
                     placeholder="Add another supported brand"
                     value={customBrandInput}
                     onChange={(e) => setCustomBrandInput(e.target.value)}
@@ -293,7 +293,7 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
                       }
                     }}
                   />
-                  <Button type="button" variant="outline" onClick={addCustomBrand}>
+                  <Button type="button" variant="outline" className="h-11 px-5 rounded-xl" onClick={addCustomBrand}>
                     <Plus className="h-4 w-4 mr-1" />
                     Add
                   </Button>
@@ -350,14 +350,14 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
               className="hidden"
               onChange={(e) => handleFiles(e.target.files)}
             />
-            <Button variant="outline" className="w-full rounded-xl" onClick={() => fileRef.current?.click()}>
+            <Button variant="outline" className="w-full h-11 px-5 rounded-xl" onClick={() => fileRef.current?.click()}>
               {photos.length ? `${photos.length} photo(s) selected` : 'Choose photos'}
             </Button>
           </div>
 
           <div className="flex gap-2 pt-2">
-            <Button variant="outline" onClick={onClose} className="flex-1 rounded-xl">Cancel</Button>
-            <Button onClick={submit} disabled={loading} className="flex-1 rounded-xl">
+            <Button variant="outline" onClick={onClose} className="flex-1 h-11 px-5 rounded-xl">Cancel</Button>
+            <Button onClick={submit} disabled={loading} className="flex-1 h-11 px-5 rounded-xl">
               {loading ? 'Adding...' : 'Add Station'}
             </Button>
           </div>
