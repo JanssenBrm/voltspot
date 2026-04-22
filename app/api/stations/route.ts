@@ -65,10 +65,14 @@ export async function POST(req: NextRequest) {
   if (error) return NextResponse.json({ error }, { status: 400 })
 
   let role: string | null = null
+  let dbUserId: string | null = null
   if (userId) {
     try {
       const [user] = await db.select({ role: users.role }).from(users).where(eq(users.id, userId)).limit(1)
-      role = user?.role ?? null
+      if (user) {
+        role = user.role ?? null
+        dbUserId = userId
+      }
     } catch {
       // Non-fatal: proceed without role (treat as unprivileged)
     }
@@ -83,7 +87,7 @@ export async function POST(req: NextRequest) {
           requestType: 'create',
           status: 'pending',
           payload: payload as Record<string, unknown>,
-          requestedBy: userId ?? null,
+          requestedBy: dbUserId,
         })
         .returning({ id: stationChangeRequests.id, status: stationChangeRequests.status })
       return NextResponse.json({ request, queued: true }, { status: 202 })

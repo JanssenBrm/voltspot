@@ -52,6 +52,7 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
   const [showMapPicker, setShowMapPicker] = useState(false)
   const [mapViewLat, setMapViewLat] = useState<number | undefined>()
   const [mapViewLng, setMapViewLng] = useState<number | undefined>()
+  const [fieldErrors, setFieldErrors] = useState<{ name?: string; location?: string }>({})
   const fileRef = useRef<HTMLInputElement>(null)
   const brandOptions = useMemo(() => [...BIKE_BRAND_OPTIONS, ...customBrands], [customBrands])
 
@@ -75,6 +76,7 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
   const setCoordinates = useCallback((nextLat: string, nextLng: string) => {
     setLat(nextLat)
     setLng(nextLng)
+    setFieldErrors((prev) => ({ ...prev, location: undefined }))
     void reverseGeocode(nextLat, nextLng)
   }, [reverseGeocode])
 
@@ -151,14 +153,14 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
   }
 
   const submit = async () => {
-    if (!name.trim()) {
-      toast.error('Please enter a station name')
+    const newErrors: { name?: string; location?: string } = {}
+    if (!name.trim()) newErrors.name = 'Please enter a station name'
+    if (!lat || !lng) newErrors.location = 'Please select a location using one of the buttons above'
+    if (Object.keys(newErrors).length) {
+      setFieldErrors(newErrors)
       return
     }
-    if (!lat || !lng) {
-      toast.error('Please select a location — use "Use my location" or drop a pin on the map')
-      return
-    }
+    setFieldErrors({})
     const compatibilityOptions = supportsAllBrands
       ? [BYO_CHARGER_OPTION, 'All e-bike brands']
       : supportedBrands
@@ -218,14 +220,15 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
           <div className="space-y-2">
             <Label>Station Name *</Label>
             <Input
-              className="h-11 rounded-xl"
+              className={`h-11 rounded-xl ${fieldErrors.name ? 'border-destructive focus-visible:ring-destructive' : ''}`}
               placeholder="e.g. City Centre Charging Hub"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => { setName(e.target.value); if (e.target.value.trim()) setFieldErrors((prev) => ({ ...prev, name: undefined })) }}
             />
+            {fieldErrors.name && <p className="text-xs text-destructive">{fieldErrors.name}</p>}
           </div>
 
-          <div className="space-y-2 rounded-2xl border border-border/70 p-4 bg-muted/20">
+          <div className={`space-y-2 rounded-2xl border p-4 bg-muted/20 ${fieldErrors.location ? 'border-destructive' : 'border-border/70'}`}>
             <Label>Location *</Label>
             <p className="text-xs text-muted-foreground">
               Choose your location and we&apos;ll fill in the address automatically.
@@ -254,21 +257,26 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
                 />
               </div>
             )}
-            {(lat || lng) && (
+            {(lat || lng) ? (
               <p className="text-xs text-muted-foreground">
                 Location selected ✓
               </p>
-            )}
+            ) : fieldErrors.location ? (
+              <p className="text-xs text-destructive">{fieldErrors.location}</p>
+            ) : null}
           </div>
 
           <div className="space-y-2">
-            <Label>Address</Label>
+            <Label>Address <span className="text-muted-foreground font-normal">(optional)</span></Label>
             <Input
               className="h-11 rounded-xl px-4"
-              placeholder={addressLoading ? 'Resolving address...' : 'Address is derived from selected location'}
+              placeholder={addressLoading ? 'Resolving address...' : 'Auto-filled from location — or enter manually'}
               value={address}
               onChange={(e) => setAddress(e.target.value)}
             />
+            <p className="text-xs text-muted-foreground">
+              No specific format required. You can enter any recognisable description of the address.
+            </p>
           </div>
 
           <div className="space-y-3 rounded-2xl border border-border/70 p-4 bg-muted/20">
