@@ -12,7 +12,7 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "seed:badges": "tsx scripts/seed-badges.ts",
-    "seed:ocm": "tsx scripts/seed-ocm.ts"
+    "seed:osm": "tsx scripts/seed-osm.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
