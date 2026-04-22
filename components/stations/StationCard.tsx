@@ -76,7 +76,7 @@ export default function StationCard({ station }: StationCardProps) {
         </div>
       ) : null}
 
-      <Button variant="outline" size="sm" className="w-full" asChild>
+      <Button variant="outline" size="sm" className="w-full p-4" asChild>
         <Link href={`/stations/${station.id}`}>View Station</Link>
       </Button>
     </div>

@@ -174,7 +174,7 @@ export default async function StationDetailPage({ params }: { params: { id: stri
 
         {/* Actions */}
         <div>
-          <Button className="h-10 rounded-xl px-4 shadow-sm hover:shadow" asChild>
+          <Button className="p-4 rounded-xl shadow-sm hover:shadow" asChild>
             <a
               href={`https://www.google.com/maps/dir/?api=1&destination=${station.latitude},${station.longitude}`}
               target="_blank"

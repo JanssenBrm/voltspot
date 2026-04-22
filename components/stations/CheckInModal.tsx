@@ -142,8 +142,8 @@ export default function CheckInModal({
           )}
 
           <div className="flex gap-2">
-            <Button variant="outline" onClick={onClose} className="flex-1">Cancel</Button>
-            <Button onClick={submit} disabled={loading} className="flex-1">
+            <Button variant="outline" onClick={onClose} className="flex-1 p-4">Cancel</Button>
+            <Button onClick={submit} disabled={loading} className="flex-1 p-4">
               {loading ? 'Submitting...' : 'Submit'}
             </Button>
           </div>

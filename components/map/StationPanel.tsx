@@ -27,6 +27,7 @@ import { PLUG_COLORS, PLUG_ICONS } from '@/lib/plugTypes'
 import { calculateDistanceMeters } from '@/lib/geo'
 import CheckInModal from '@/components/stations/CheckInModal'
 import ClaimButton from '@/components/stations/ClaimButton'
+import EditStationModal from '@/components/stations/EditStationModal'
 import Image from 'next/image'
 import Link from 'next/link'
 import { toast } from 'sonner'
@@ -39,6 +40,7 @@ interface StationDetail {
   address: string | null
   city: string | null
   country: string | null
+  countryCode: string | null
   status: string | null
   isFree: boolean | null
   isIndoor: boolean | null
@@ -89,6 +91,7 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
   const [station, setStation] = useState<StationDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [checkInOpen, setCheckInOpen] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
   const [photoIdx, setPhotoIdx] = useState(0)
   const [userCoords, setUserCoords] = useState<{ latitude: number; longitude: number } | null>(null)
   const [locationError, setLocationError] = useState<string | null>(null)
@@ -159,31 +162,7 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
       .then(setStation)
   }
 
-  const suggestEdit = async () => {
-    const suggestedName = window.prompt('Suggest a corrected station name (optional)')?.trim()
-    const suggestedNotes = window.prompt('Describe additional edit suggestions (optional)')?.trim()
-    if (!suggestedName && !suggestedNotes) return
-
-    const res = await fetch(`/api/stations/${stationId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...(suggestedName ? { name: suggestedName } : {}),
-        ...(suggestedNotes ? { accessNotes: suggestedNotes } : {}),
-      }),
-    })
-    const data = await res.json()
-    if (!res.ok) {
-      toast.error(data.error ?? 'Could not submit edit suggestion')
-      return
-    }
-    if (res.status === 202) {
-      toast.success('Edit suggestion submitted for review')
-      return
-    }
-    toast.success('Station updated')
-    refresh()
-  }
+  const suggestEdit = () => setEditOpen(true)
 
   const requestRemoval = async () => {
     if (!window.confirm('Request removal of this station?')) return
@@ -337,7 +316,7 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
               {/* Action buttons */}
               <div className="flex flex-col gap-2">
                 <Button
-                  className="w-full h-10 rounded-xl shadow-sm hover:shadow"
+                  className="w-full p-4 rounded-xl shadow-sm hover:shadow"
                   onClick={() => setCheckInOpen(true)}
                   disabled={!canCheckIn}
                 >
@@ -355,7 +334,7 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
                 )}
 
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="flex-1 h-9 rounded-xl" asChild>
+                  <Button variant="outline" size="sm" className="flex-1 p-4 rounded-xl" asChild>
                     <a
                       href={`https://www.google.com/maps/dir/?api=1&destination=${station.latitude},${station.longitude}`}
                       target="_blank"
@@ -365,7 +344,7 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
                       Directions
                     </a>
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1 h-9 rounded-xl" asChild>
+                  <Button variant="outline" size="sm" className="flex-1 p-4 rounded-xl" asChild>
                     <Link href={`/stations/${station.id}`}>
                       <ExternalLink className="h-3 w-3 mr-1" />
                       Full Page
@@ -439,6 +418,15 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
           userId={userId}
           userLatitude={userCoords?.latitude ?? null}
           userLongitude={userCoords?.longitude ?? null}
+        />
+      )}
+
+      {station && editOpen && (
+        <EditStationModal
+          open={editOpen}
+          onClose={() => setEditOpen(false)}
+          onSaved={refresh}
+          station={station}
         />
       )}
     </div>

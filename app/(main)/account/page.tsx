@@ -61,7 +61,7 @@ export default function AccountPage() {
           <Label>Display Name</Label>
           <Input value={name} onChange={(e) => setName(e.target.value)} />
         </div>
-        <Button onClick={saveProfile} disabled={loading}>
+        <Button onClick={saveProfile} disabled={loading} className="p-4">
           {loading ? 'Saving...' : 'Save Changes'}
         </Button>
       </section>
@@ -71,7 +71,7 @@ export default function AccountPage() {
       {/* Sign out */}
       <section className="space-y-2">
         <h2 className="font-semibold">Session</h2>
-        <Button variant="outline" onClick={() => signOut({ redirectUrl: '/' })}>
+        <Button variant="outline" className="p-4" onClick={() => signOut({ redirectUrl: '/' })}>
           Sign Out
         </Button>
       </section>
@@ -84,6 +84,7 @@ export default function AccountPage() {
         <p className="text-sm text-muted-foreground">Once deleted, your account cannot be recovered.</p>
         <Button
           variant="destructive"
+          className="p-4"
           onClick={() => {
             if (confirm('Are you sure? This cannot be undone.')) {
               fetch('/api/account', { method: 'DELETE' }).then(() => signOut({ redirectUrl: '/' }))
