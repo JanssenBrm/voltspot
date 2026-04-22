@@ -1,5 +1,6 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useEffect, useState } from 'react'
 import { CheckCircle, MapPin, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -8,6 +9,8 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { toast } from 'sonner'
 import { PLUG_COLORS, PLUG_ICONS } from '@/lib/plugTypes'
+
+const StationPreviewMap = dynamic(() => import('@/components/map/StationPreviewMap'), { ssr: false })
 
 type ChangeRequest = {
   id: string
@@ -98,15 +101,18 @@ function PayloadDisplay({ payload }: { payload: Record<string, unknown> }) {
   if (entries.length === 0) return null
 
   return (
-    <div className="rounded-xl border bg-muted/30 p-3 space-y-3">
+    <div className="rounded-xl border bg-muted/30 p-4 space-y-4">
       {hasCoords && (
-        <div className="flex flex-col gap-0.5">
-          <span className="text-xs font-medium text-muted-foreground">Coordinates</span>
-          <span className="text-sm flex items-center gap-1">
-            <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-            {lat?.toFixed(6)}, {lng?.toFixed(6)}
-          </span>
-        </div>
+        <>
+          <StationPreviewMap lat={lat} lng={lng} />
+          <div className="flex flex-col gap-0.5">
+            <span className="text-xs font-medium text-muted-foreground">Coordinates</span>
+            <span className="text-sm flex items-center gap-1">
+              <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              {lat.toFixed(6)}, {lng.toFixed(6)}
+            </span>
+          </div>
+        </>
       )}
       {entries
         .filter(([k]) => k !== 'latitude' && k !== 'longitude')
@@ -160,7 +166,7 @@ export default function ModerationQueue() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl p-4 md:p-6 space-y-4">
+    <div className="mx-auto max-w-3xl p-4 space-y-4">
       <h1 className="text-2xl font-bold">Moderation queue</h1>
       {loading ? (
         <p className="text-sm text-muted-foreground">Loading requests…</p>
