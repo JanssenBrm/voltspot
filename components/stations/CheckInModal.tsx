@@ -15,9 +15,18 @@ interface CheckInModalProps {
   onClose: () => void
   stationId: string
   userId: string | null
+  userLatitude: number | null
+  userLongitude: number | null
 }
 
-export default function CheckInModal({ open, onClose, stationId, userId }: CheckInModalProps) {
+export default function CheckInModal({
+  open,
+  onClose,
+  stationId,
+  userId,
+  userLatitude,
+  userLongitude,
+}: CheckInModalProps) {
   const [rating, setRating] = useState(0)
   const [hoverRating, setHoverRating] = useState(0)
   const [comment, setComment] = useState('')
@@ -30,7 +39,13 @@ export default function CheckInModal({ open, onClose, stationId, userId }: Check
       const res = await fetch(`/api/stations/${stationId}/checkin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rating: rating || undefined, comment: comment || undefined, statusReported: statusReported || undefined }),
+        body: JSON.stringify({
+          rating: rating || undefined,
+          comment: comment || undefined,
+          statusReported: statusReported || undefined,
+          userLatitude,
+          userLongitude,
+        }),
       })
       const data = await res.json()
 

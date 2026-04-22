@@ -23,6 +23,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { PLUG_COLORS, PLUG_ICONS } from '@/lib/plugTypes'
+import { calculateDistanceMeters } from '@/lib/geo'
 import CheckInModal from '@/components/stations/CheckInModal'
 import ClaimButton from '@/components/stations/ClaimButton'
 import Image from 'next/image'
@@ -68,11 +69,16 @@ const STATUS_CONFIG = {
   offline: { icon: XCircle, color: 'text-red-500', label: 'Offline' },
 }
 
+const MAX_CHECKIN_DISTANCE_METERS = 100
+
 export default function StationPanel({ stationId, onClose, userId }: StationPanelProps) {
   const [station, setStation] = useState<StationDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [checkInOpen, setCheckInOpen] = useState(false)
   const [photoIdx, setPhotoIdx] = useState(0)
+  const [userCoords, setUserCoords] = useState<{ latitude: number; longitude: number } | null>(null)
+  const [locationError, setLocationError] = useState<string | null>(null)
+  const [locating, setLocating] = useState(true)
 
   useEffect(() => {
     setLoading(true)
@@ -82,6 +88,36 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
       .finally(() => setLoading(false))
   }, [stationId])
 
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setLocationError('Location is not supported by your browser.')
+      setLocating(false)
+      return
+    }
+
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        setUserCoords({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        })
+        setLocationError(null)
+        setLocating(false)
+      },
+      () => {
+        setLocationError('Enable location access to check in within 100m of this station.')
+        setLocating(false)
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 10000,
+        timeout: 10000,
+      },
+    )
+
+    return () => navigator.geolocation.clearWatch(watchId)
+  }, [])
+
   const statusCfg = STATUS_CONFIG[(station?.status as keyof typeof STATUS_CONFIG) ?? 'unverified'] ?? STATUS_CONFIG.unverified
   const StatusIcon = statusCfg.icon
   const cityCountryLabel = [station?.city, station?.country].filter(Boolean).join(', ')
@@ -90,6 +126,18 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
     (station
       ? `${station.latitude.toFixed(4)}, ${station.longitude.toFixed(4)}`
       : '')
+  const distanceMeters =
+    station && userCoords
+      ? calculateDistanceMeters(userCoords.latitude, userCoords.longitude, station.latitude, station.longitude)
+      : null
+  const canCheckIn = distanceMeters != null && distanceMeters <= MAX_CHECKIN_DISTANCE_METERS
+  const checkInDisabledReason = locating
+    ? 'Checking your location...'
+    : locationError
+      ? locationError
+      : distanceMeters == null
+        ? `You need to be within ${MAX_CHECKIN_DISTANCE_METERS}m to check in.`
+        : `Move closer to the station to check in. You are ${Math.round(distanceMeters)}m away (max ${MAX_CHECKIN_DISTANCE_METERS}m).`
 
   const refresh = () => {
     fetch(`/api/stations/${stationId}`)
@@ -215,10 +263,19 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
 
               {/* Action buttons */}
               <div className="flex flex-col gap-2">
-                <Button className="w-full h-10 rounded-xl shadow-sm hover:shadow" onClick={() => setCheckInOpen(true)}>
+                <Button
+                  className="w-full h-10 rounded-xl shadow-sm hover:shadow"
+                  onClick={() => setCheckInOpen(true)}
+                  disabled={!canCheckIn}
+                >
                   <Zap className="h-4 w-4 mr-2" />
                   Check In
                 </Button>
+                {!canCheckIn && (
+                  <p className="text-xs text-muted-foreground rounded-xl border border-border/70 bg-muted/30 px-3 py-2">
+                    {checkInDisabledReason}
+                  </p>
+                )}
 
                 {!station.claimedBy && userId && (
                   <ClaimButton stationId={station.id} onClaimed={refresh} />
@@ -306,6 +363,8 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
           onClose={() => setCheckInOpen(false)}
           stationId={station.id}
           userId={userId}
+          userLatitude={userCoords?.latitude ?? null}
+          userLongitude={userCoords?.longitude ?? null}
         />
       )}
     </div>
