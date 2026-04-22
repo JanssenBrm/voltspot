@@ -296,55 +296,56 @@ export default function VoltMap({
         style={{ display: hasLocationFix ? 'block' : 'none' }}
         aria-hidden="true"
       />
-      {/* Custom zoom controls — bottom-left, above bottom nav on mobile */}
-      <div className="absolute left-3 bottom-20 md:bottom-4 flex flex-col gap-1 z-10">
+      {/* Custom map controls — bottom-left, above bottom nav on mobile */}
+      <div className="absolute left-4 bottom-24 md:bottom-5 flex flex-col gap-2 z-20">
+        {hasLocationFix && (
+          <button
+            onClick={() => {
+              if (lastCoordsRef.current && mapInstance.current) {
+                mapInstance.current.getView().animate({
+                  center: lastCoordsRef.current,
+                  zoom: 15,
+                  duration: 600,
+                })
+              }
+            }}
+            className="bg-card rounded-2xl shadow-md p-3 border border-border hover:bg-muted transition-colors"
+            aria-label="Centre map on my location"
+            title="My location"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              className="text-primary"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="12" r="3" />
+              <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+              <circle cx="12" cy="12" r="8" strokeOpacity="0.3" />
+            </svg>
+          </button>
+        )}
         <button
           onClick={() => handleZoom(1)}
-          className="w-9 h-9 flex items-center justify-center rounded-md bg-background/90 backdrop-blur border border-border/60 shadow text-foreground text-lg font-bold hover:bg-accent transition-colors"
+          className="w-11 h-11 flex items-center justify-center rounded-2xl bg-background/95 backdrop-blur border border-border/70 shadow text-foreground text-xl font-bold hover:bg-accent transition-colors"
           aria-label="Zoom in"
         >
           +
         </button>
         <button
           onClick={() => handleZoom(-1)}
-          className="w-9 h-9 flex items-center justify-center rounded-md bg-background/90 backdrop-blur border border-border/60 shadow text-foreground text-lg font-bold hover:bg-accent transition-colors"
+          className="w-11 h-11 flex items-center justify-center rounded-2xl bg-background/95 backdrop-blur border border-border/70 shadow text-foreground text-xl font-bold hover:bg-accent transition-colors"
           aria-label="Zoom out"
         >
           −
         </button>
       </div>
-      {hasLocationFix && (
-        <button
-          onClick={() => {
-            if (lastCoordsRef.current && mapInstance.current) {
-              mapInstance.current.getView().animate({
-                center: lastCoordsRef.current,
-                zoom: 15,
-                duration: 600,
-              })
-            }
-          }}
-          className="absolute bottom-32 left-3 z-20 bg-card rounded-full shadow-md p-2.5 border border-border hover:bg-muted transition-colors"
-          aria-label="Centre map on my location"
-          title="My location"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#3B82F6"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="12" cy="12" r="3" />
-            <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
-            <circle cx="12" cy="12" r="8" strokeOpacity="0.3" />
-          </svg>
-        </button>
-      )}
     </div>
   )
 }

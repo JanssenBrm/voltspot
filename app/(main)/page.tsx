@@ -78,7 +78,7 @@ export default function HomePage() {
       </div>
 
       {/* Top controls */}
-      <div className="absolute top-2 left-2 right-2 md:right-auto md:left-4 md:top-4 md:w-80 z-10 flex flex-col gap-2">
+      <div className="absolute top-3 left-3 right-3 md:right-auto md:left-4 md:top-4 md:w-80 z-10 flex flex-col gap-2.5">
         <SearchBar onLocationFound={handleLocationFound} />
         <MapFilters filters={filters} onFiltersChange={setFilters} />
       </div>
@@ -106,10 +106,10 @@ export default function HomePage() {
       {/* Add Station FAB */}
       <Button
         size="lg"
-        className="absolute bottom-20 right-4 md:bottom-6 rounded-full shadow-lg z-10 gap-2"
+        className="absolute bottom-24 right-4 md:bottom-6 rounded-2xl md:rounded-full shadow-lg z-20 gap-2 h-14 w-14 md:h-10 md:w-auto p-0 md:px-3"
         onClick={handleAddClick}
       >
-        <Plus className="h-5 w-5" />
+        <Plus className="h-6 w-6 md:h-5 md:w-5" />
         <span className="hidden sm:inline">Add Station</span>
       </Button>
 

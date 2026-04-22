@@ -23,8 +23,6 @@ interface MapFiltersProps {
 export default function MapFilters({ filters, onFiltersChange }: MapFiltersProps) {
   const [open, setOpen] = useState(false)
 
-  const [plugType, setPlugType] = useState('all')
-
   const update = (patch: Partial<Filters>) => onFiltersChange({ ...filters, ...patch })
 
   const activeCount = [
@@ -35,15 +33,15 @@ export default function MapFilters({ filters, onFiltersChange }: MapFiltersProps
   ].filter(Boolean).length
 
   return (
-    <div className="bg-background/95 backdrop-blur rounded-lg border shadow-sm">
+    <div className="bg-background/95 backdrop-blur rounded-2xl border border-border/70 shadow-sm">
       <button
-        className="flex items-center gap-2 px-3 py-2 w-full text-sm font-medium"
+        className="flex items-center gap-2.5 px-4 py-3 w-full text-sm font-medium"
         onClick={() => setOpen((o) => !o)}
       >
-        <Filter className="h-4 w-4" />
+        <Filter className="h-4 w-4 text-primary" />
         Filters
         {activeCount > 0 && (
-          <span className="ml-1 rounded-full bg-green-500 text-white text-xs px-1.5 py-0.5">
+          <span className="ml-1 rounded-full bg-primary text-primary-foreground text-xs px-1.5 py-0.5">
             {activeCount}
           </span>
         )}

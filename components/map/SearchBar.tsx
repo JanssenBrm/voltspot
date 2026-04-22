@@ -38,26 +38,26 @@ export default function SearchBar({ onLocationFound }: SearchBarProps) {
   }, [query, onLocationFound])
 
   return (
-    <div className="relative flex gap-2">
+    <div className="relative flex gap-2.5">
       <div className="relative flex-1">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Search className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Search location..."
-          className="pl-8 pr-8 bg-background/95 backdrop-blur border-border/50"
+          className="h-11 rounded-2xl pl-9 pr-9 bg-background/95 backdrop-blur border-border/60 shadow-sm"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && search()}
         />
         {query && (
           <button
-            className="absolute right-2 top-2.5"
+            className="absolute right-2.5 top-3 p-0.5 rounded-full hover:bg-muted transition-colors"
             onClick={() => { setQuery(''); setError(null) }}
           >
             <X className="h-4 w-4 text-muted-foreground" />
           </button>
         )}
       </div>
-      <Button size="sm" onClick={search} disabled={loading}>
+      <Button size="default" className="h-11 rounded-2xl px-4 shadow-sm" onClick={search} disabled={loading}>
         {loading ? '...' : 'Go'}
       </Button>
       {error && (
