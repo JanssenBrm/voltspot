@@ -33,6 +33,22 @@ export default function LocationPickerMap({ lat, lng, onPick }: LocationPickerMa
   const mapInstance = useRef<Map | null>(null)
   const markerSourceRef = useRef(new VectorSource())
   const markerFeatureRef = useRef<Feature<Point> | null>(null)
+  const onPickRef = useRef(onPick)
+
+  useEffect(() => {
+    onPickRef.current = onPick
+  }, [onPick])
+
+  const setMarkerAtCoordinate = (coordinate: number[]) => {
+    const point = new Point(coordinate)
+    if (!markerFeatureRef.current) {
+      markerFeatureRef.current = new Feature(point)
+      markerFeatureRef.current.setStyle(pinStyle)
+      markerSourceRef.current.addFeature(markerFeatureRef.current)
+      return
+    }
+    markerFeatureRef.current.setGeometry(point)
+  }
 
   useEffect(() => {
     if (!mapRef.current || mapInstance.current) return
@@ -56,15 +72,8 @@ export default function LocationPickerMap({ lat, lng, onPick }: LocationPickerMa
 
     const clickHandler = (event: MapBrowserEvent<MouseEvent>) => {
       const [pickedLng, pickedLat] = toLonLat(event.coordinate)
-      const point = new Point(event.coordinate)
-      if (!markerFeatureRef.current) {
-        markerFeatureRef.current = new Feature(point)
-        markerFeatureRef.current.setStyle(pinStyle)
-        markerSourceRef.current.addFeature(markerFeatureRef.current)
-      } else {
-        markerFeatureRef.current.setGeometry(point)
-      }
-      onPick(pickedLat, pickedLng)
+      setMarkerAtCoordinate(event.coordinate)
+      onPickRef.current(pickedLat, pickedLng)
     }
 
     map.on('click', clickHandler)
@@ -75,24 +84,25 @@ export default function LocationPickerMap({ lat, lng, onPick }: LocationPickerMa
       map.setTarget(undefined)
       mapInstance.current = null
     }
-  }, [lat, lng, onPick])
+  }, [])
 
   useEffect(() => {
     if (lat == null || lng == null || !mapInstance.current) return
     const nextCoordinate = fromLonLat([lng, lat])
-    const point = new Point(nextCoordinate)
-    if (!markerFeatureRef.current) {
-      markerFeatureRef.current = new Feature(point)
-      markerFeatureRef.current.setStyle(pinStyle)
-      markerSourceRef.current.addFeature(markerFeatureRef.current)
-    } else {
-      markerFeatureRef.current.setGeometry(point)
-    }
+    setMarkerAtCoordinate(nextCoordinate)
     mapInstance.current.getView().animate({
       center: nextCoordinate,
       duration: 250,
     })
   }, [lat, lng])
 
-  return <div ref={mapRef} className="h-56 w-full" />
+  return (
+    <div
+      ref={mapRef}
+      className="h-56 w-full"
+      role="application"
+      aria-label="Interactive map for selecting charging station location"
+      aria-describedby="location-picker-map-help"
+    />
+  )
 }

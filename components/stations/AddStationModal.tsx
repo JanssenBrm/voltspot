@@ -57,10 +57,7 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
     if (!nextLat || !nextLng) return
     setAddressLoading(true)
     try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${encodeURIComponent(nextLat)}&lon=${encodeURIComponent(nextLng)}&format=jsonv2`,
-        { headers: { 'Accept-Language': 'en' } },
-      )
+      const res = await fetch(`/api/geocode?lat=${encodeURIComponent(nextLat)}&lng=${encodeURIComponent(nextLng)}`)
       const data = await res.json()
       if (data?.display_name) setAddress(data.display_name)
     } catch { /**/ }
@@ -71,14 +68,11 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
     if (!address.trim()) return
     setAddressLoading(true)
     try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1`,
-        { headers: { 'Accept-Language': 'en' } },
-      )
+      const res = await fetch(`/api/geocode?q=${encodeURIComponent(address)}`)
       const data = await res.json()
-      if (data[0]) {
-        setLat(data[0].lat)
-        setLng(data[0].lon)
+      if (data?.lat && data?.lon) {
+        setLat(data.lat)
+        setLng(data.lon)
       }
     } catch { /**/ }
     setAddressLoading(false)
@@ -110,10 +104,14 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
       },
       {
         enableHighAccuracy: true,
-        timeout: 10000,
+        timeout: 5000,
       },
     )
   }
+
+  const handleMapPick = useCallback((pickedLat: number, pickedLng: number) => {
+    setCoordinates(String(pickedLat), String(pickedLng))
+  }, [setCoordinates])
 
   const toggleBrand = (brand: string) => {
     setSupportedBrands((prev) => prev.includes(brand) ? prev.filter((p) => p !== brand) : [...prev, brand])
@@ -146,7 +144,7 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
       toast.error('Name and location are required')
       return
     }
-    const plugTypes = supportsAllBrands
+    const compatibilityOptions = supportsAllBrands
       ? [BYO_CHARGER_OPTION, 'All e-bike brands']
       : supportedBrands
 
@@ -160,7 +158,7 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
           latitude: parseFloat(lat),
           longitude: parseFloat(lng),
           address: address || undefined,
-          plugTypes: plugTypes.length ? plugTypes : undefined,
+          plugTypes: compatibilityOptions.length ? compatibilityOptions : undefined,
           isFree,
           isIndoor,
           accessNotes: accessNotes || undefined,
@@ -220,23 +218,28 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
             </div>
             {showMapPicker && (
               <div className="rounded-xl border overflow-hidden">
+                <p id="location-picker-map-help" className="sr-only">
+                  Select a location on the map to set the station position.
+                </p>
                 <LocationPickerMap
                   lat={lat ? Number(lat) : undefined}
                   lng={lng ? Number(lng) : undefined}
-                  onPick={(pickedLat, pickedLng) => {
-                    setCoordinates(String(pickedLat), String(pickedLng))
-                  }}
+                  onPick={handleMapPick}
                 />
               </div>
             )}
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
                 <Label>Latitude *</Label>
-                <Input type="number" step="any" value={lat} readOnly className="rounded-xl bg-background" />
+                <div className="h-10 rounded-xl border bg-background px-3 py-2 text-sm text-foreground">
+                  {lat || 'Not selected yet'}
+                </div>
               </div>
               <div className="space-y-1">
                 <Label>Longitude *</Label>
-                <Input type="number" step="any" value={lng} readOnly className="rounded-xl bg-background" />
+                <div className="h-10 rounded-xl border bg-background px-3 py-2 text-sm text-foreground">
+                  {lng || 'Not selected yet'}
+                </div>
               </div>
             </div>
           </div>
@@ -250,7 +253,7 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
               />
-              <Button variant="outline" size="sm" onClick={geocodeAddress} disabled={addressLoading}>
+              <Button aria-label="Geocode address" variant="outline" size="sm" onClick={geocodeAddress} disabled={addressLoading}>
                 {addressLoading ? '...' : '📍'}
               </Button>
             </div>
@@ -304,7 +307,7 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
                 </div>
               </>
             )}
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground" aria-live="polite">
               {supportsAllBrands ? 'Users should bring their own charger.' : `${supportedBrands.length} brand(s) selected.`}
             </p>
           </div>
