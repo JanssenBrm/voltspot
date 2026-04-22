@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { stations, stationChangeRequests, users } from '@/lib/db/schema'
 import { sql, and, gte, lte, eq } from 'drizzle-orm'
-import { auth } from '@clerk/nextjs/server'
+import { auth, currentUser } from '@clerk/nextjs/server'
 import { awardPoints } from '@/lib/points'
 import { checkAndAwardBadges } from '@/lib/badges'
 import { canModerate, sanitizeStationPayload } from '@/lib/stationChangeRequests'
@@ -72,6 +72,27 @@ export async function POST(req: NextRequest) {
       if (user) {
         role = user.role ?? null
         dbUserId = userId
+      } else {
+        // User authenticated in Clerk but not yet in DB (webhook may have failed/been delayed).
+        // Proactively create the record so the change request can be linked to them.
+        try {
+          const clerkUser = await currentUser()
+          const email = clerkUser?.emailAddresses?.[0]?.emailAddress
+          if (clerkUser && email) {
+            await db
+              .insert(users)
+              .values({
+                id: userId,
+                email,
+                name: [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ') || null,
+                avatarUrl: clerkUser.imageUrl || null,
+              })
+              .onConflictDoNothing()
+            dbUserId = userId
+          }
+        } catch {
+          // Non-fatal: proceed with null requestedBy
+        }
       }
     } catch {
       // Non-fatal: proceed without role (treat as unprivileged)
