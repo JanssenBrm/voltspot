@@ -160,13 +160,17 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
   }
 
   const suggestEdit = async () => {
-    const suggestion = window.prompt('Describe your edit suggestion for this station')
-    if (!suggestion?.trim()) return
+    const suggestedName = window.prompt('Suggest a corrected station name (optional)')?.trim()
+    const suggestedNotes = window.prompt('Describe additional edit suggestions (optional)')?.trim()
+    if (!suggestedName && !suggestedNotes) return
 
     const res = await fetch(`/api/stations/${stationId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ accessNotes: suggestion.trim() }),
+      body: JSON.stringify({
+        ...(suggestedName ? { name: suggestedName } : {}),
+        ...(suggestedNotes ? { accessNotes: suggestedNotes } : {}),
+      }),
     })
     const data = await res.json()
     if (!res.ok) {

@@ -5,7 +5,7 @@ import { auth } from '@clerk/nextjs/server'
 import { db } from '@/lib/db'
 import { stationChangeRequests, stations, users } from '@/lib/db/schema'
 import { desc, eq } from 'drizzle-orm'
-import { canModerate, sanitizeStationPayload, type StationChangeType } from '@/lib/stationChangeRequests'
+import { canModerate, sanitizeStationPayload, STATION_CHANGE_TYPES, type StationChangeType } from '@/lib/stationChangeRequests'
 
 export async function GET() {
   const { userId } = await auth()
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
   const requestType = body?.requestType as StationChangeType | undefined
   const stationId = typeof body?.stationId === 'string' ? body.stationId : undefined
 
-  if (!requestType || !['create', 'edit', 'delete'].includes(requestType)) {
+  if (!requestType || !STATION_CHANGE_TYPES.includes(requestType)) {
     return NextResponse.json({ error: 'Invalid request type' }, { status: 400 })
   }
 

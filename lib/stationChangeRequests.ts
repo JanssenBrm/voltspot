@@ -2,7 +2,8 @@ import { users } from '@/lib/db/schema'
 
 const MODERATOR_ROLES = new Set(['admin', 'moderator', 'approved_member'])
 
-export type StationChangeType = 'create' | 'edit' | 'delete'
+export const STATION_CHANGE_TYPES = ['create', 'edit', 'delete'] as const
+export type StationChangeType = (typeof STATION_CHANGE_TYPES)[number]
 
 export type SanitizedStationPayload = {
   name?: string
@@ -51,8 +52,14 @@ export function canModerate(role: (typeof users.$inferSelect)['role'] | null | u
   return !!role && MODERATOR_ROLES.has(role)
 }
 
+export function definedOnly<T extends Record<string, unknown>>(obj: T) {
+  return Object.fromEntries(Object.entries(obj).filter(([, value]) => value !== undefined))
+}
+
 export function sanitizeStationPayload(body: unknown, requestType: StationChangeType): ValidationResult {
-  if (!body || typeof body !== 'object') return { payload: {}, error: 'Invalid request body' }
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return { payload: {}, error: 'Invalid request body' }
+  }
 
   const source = body as Record<string, unknown>
   const payload: SanitizedStationPayload = {

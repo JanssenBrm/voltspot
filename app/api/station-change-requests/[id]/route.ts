@@ -5,14 +5,10 @@ import { auth } from '@clerk/nextjs/server'
 import { db } from '@/lib/db'
 import { checkIns, stationChangeRequests, stations, users } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
-import { canModerate, sanitizeStationPayload, type SanitizedStationPayload } from '@/lib/stationChangeRequests'
+import { canModerate, definedOnly, sanitizeStationPayload, type SanitizedStationPayload } from '@/lib/stationChangeRequests'
 
 function asPayload(payload: unknown) {
   return (payload ?? {}) as SanitizedStationPayload
-}
-
-function definedOnly<T extends Record<string, unknown>>(obj: T) {
-  return Object.fromEntries(Object.entries(obj).filter(([, value]) => value !== undefined))
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {

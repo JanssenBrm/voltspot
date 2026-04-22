@@ -106,13 +106,13 @@ export async function POST(req: NextRequest) {
   const { userBadges, badges } = await import('@/lib/db/schema')
   const { eq: eqFn } = await import('drizzle-orm')
   if (userId) {
-    const [existing] = await drizzleDb
-      .select()
+    const existing = await drizzleDb
+      .select({ badgeSlug: userBadges.badgeSlug })
       .from(userBadges)
       .where(eqFn(userBadges.userId, userId))
       .limit(50)
 
-    const hasTrailBlazer = existing && (existing as any).badgeSlug === 'trail-blazer'
+    const hasTrailBlazer = existing.some((badge) => badge.badgeSlug === 'trail-blazer')
     if (!hasTrailBlazer) {
       try {
         await drizzleDb.insert(userBadges).values({ userId, badgeSlug: 'trail-blazer' })

@@ -5,11 +5,7 @@ import { db } from '@/lib/db'
 import { stations, checkIns, users, stationChangeRequests } from '@/lib/db/schema'
 import { eq, desc } from 'drizzle-orm'
 import { auth } from '@clerk/nextjs/server'
-import { canModerate, sanitizeStationPayload } from '@/lib/stationChangeRequests'
-
-function definedOnly<T extends Record<string, unknown>>(obj: T) {
-  return Object.fromEntries(Object.entries(obj).filter(([, value]) => value !== undefined))
-}
+import { canModerate, definedOnly, sanitizeStationPayload } from '@/lib/stationChangeRequests'
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const [station] = await db
