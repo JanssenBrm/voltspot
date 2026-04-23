@@ -17,6 +17,7 @@ import {
   Trees,
   CircleDollarSign,
   Wallet,
+  Flag,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -31,6 +32,7 @@ import EditStationModal from '@/components/stations/EditStationModal'
 import Image from 'next/image'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
 
 interface StationDetail {
   id: string
@@ -88,6 +90,7 @@ const STATUS_CONFIG = {
 const MAX_CHECKIN_DISTANCE_METERS = 100
 
 export default function StationPanel({ stationId, onClose, userId }: StationPanelProps) {
+  const router = useRouter()
   const [station, setStation] = useState<StationDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [checkInOpen, setCheckInOpen] = useState(false)
@@ -334,7 +337,7 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
                 )}
 
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="flex-1 p-4 rounded-xl" asChild>
+                  <Button variant="outline" className="flex-1 p-4 rounded-xl" asChild>
                     <a
                       href={`https://www.google.com/maps/dir/?api=1&destination=${station.latitude},${station.longitude}`}
                       target="_blank"
@@ -344,7 +347,7 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
                       Directions
                     </a>
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1 p-4 rounded-xl" asChild>
+                  <Button variant="outline" className="flex-1 p-4 rounded-xl" asChild>
                     <Link href={`/stations/${station.id}`}>
                       <ExternalLink className="h-3 w-3 mr-1" />
                       Full Page
@@ -352,12 +355,12 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
                   </Button>
                 </div>
 
-                <Button variant="ghost" size="sm" className="rounded-xl p-4" onClick={suggestEdit}>
+                <Button variant="ghost" className="rounded-xl p-4" onClick={suggestEdit}>
                   <Edit className="h-3 w-3 mr-1" />
                   Suggest Edit
                 </Button>
 
-                <Button variant="ghost" size="sm" className="rounded-xl p-4 text-destructive hover:text-destructive" onClick={requestRemoval}>
+                <Button variant="ghost" className="rounded-xl p-4 text-destructive hover:text-destructive" onClick={requestRemoval}>
                   <Trash2 className="h-3 w-3 mr-1" />
                   Request Removal
                 </Button>
@@ -398,10 +401,13 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
                 </div>
               )}
 
-              <Button variant="ghost" size="sm" className="w-full text-destructive hover:text-destructive hover:bg-red-100 rounded-xl p-4" asChild>
-                <Link href={`/stations/${station.id}?report=1`}>
-                  Report an Issue
-                </Link>
+              <Button
+                variant="ghost"
+                className="w-full p-4 rounded-xl text-destructive hover:text-destructive hover:bg-red-100"
+                onClick={() => { onClose(); router.push(`/stations/${station.id}?report=1`) }}
+              >
+                <Flag className="h-3 w-3 mr-1" />
+                Report an Issue
               </Button>
             </>
           ) : (
