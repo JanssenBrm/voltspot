@@ -30,7 +30,6 @@ import CheckInModal from '@/components/stations/CheckInModal'
 import ClaimButton from '@/components/stations/ClaimButton'
 import EditStationModal from '@/components/stations/EditStationModal'
 import Image from 'next/image'
-import Link from 'next/link'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 
@@ -337,21 +336,21 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
                 )}
 
                 <div className="flex gap-2">
-                  <Button variant="outline" className="flex-1 p-4 rounded-xl" asChild>
-                    <a
-                      href={`https://www.google.com/maps/dir/?api=1&destination=${station.latitude},${station.longitude}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Navigation className="h-3 w-3 mr-1" />
-                      Directions
-                    </a>
+                  <Button
+                    variant="outline"
+                    className="flex-1 p-4 rounded-xl"
+                    onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${station.latitude},${station.longitude}`, '_blank', 'noopener,noreferrer')}
+                  >
+                    <Navigation className="h-3 w-3 mr-1" />
+                    Directions
                   </Button>
-                  <Button variant="outline" className="flex-1 p-4 rounded-xl" asChild>
-                    <Link href={`/stations/${station.id}`}>
-                      <ExternalLink className="h-3 w-3 mr-1" />
-                      Full Page
-                    </Link>
+                  <Button
+                    variant="outline"
+                    className="flex-1 p-4 rounded-xl"
+                    onClick={() => { onClose(); router.push(`/stations/${station.id}`) }}
+                  >
+                    <ExternalLink className="h-3 w-3 mr-1" />
+                    Full Page
                   </Button>
                 </div>
 
