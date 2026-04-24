@@ -54,12 +54,12 @@ OCM connection type titles (e.g. `"Type 2 (Socket Only)"`, `"Schuko"`) are match
 | `ccs`, `combo`, `chademo`, `cha-demo`, `tesla`, `nacs`, `supercharger`, `gb/t`, `gb_t`, `gbt` | `Other` (car-only — checked first) |
 | `type 2`, `type2`, `mennekes`, `iec 62196-2`, `iec62196`                  | `Type 2`      |
 | `type 1`, `type1`, `j1772`, `sae j1772`                                   | `Type 1`      |
-| `schuko`, `standard outlet`, `household`, `cee 7/4`                       | `Schuko`      |
-| `bs 1363`, `bs1363`, `type g`, `uk 3-pin`, `uk plug`                      | `UK`          |
-| `nema`, `type a`, `type b`, `us standard`, `american plug`                | `US`          |
-| `sev 1011`, `sev1011`, `type j`, `swiss`                                  | `Swiss`       |
-| `type e`, `french`, `belgian`, `cee 7/5`                                  | `French`      |
-| `cee blue`, `cee 16a`, `camping`, `ceeform`                               | `CEE Blue`    |
+| `schuko`, `standard outlet`, `cee 7/4`                                    | `Schuko`      |
+| `bs 1363`, `bs1363`, `uk 3-pin`, `uk plug`, exact `type g`                | `UK`          |
+| `nema`, `us standard`, `american plug`, exact `type a` / `type b`         | `US`          |
+| `sev 1011`, `sev1011`, `type j / sev`, `swiss outlet`                     | `Swiss`       |
+| `french outlet`, `belgian outlet`, `cee 7/5`, exact `type e`              | `French`      |
+| `cee blue`, `cee 16a`, `ceeform`, `camping plug`                          | `CEE Blue`    |
 | *(no keyword match)*                                                      | `Other`       |
 
 Duplicate canonical types arising from multiple connectors of the same kind are de-duplicated before being stored.

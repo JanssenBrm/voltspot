@@ -150,12 +150,12 @@ export function normalizePlugType(raw: string): PlugType {
   // E-bike-relevant AC keyword matching (OCM titles, legacy values, user input)
   if (lower.includes('type 2') || lower.includes('type2') || lower.includes('mennekes') || lower.includes('iec 62196-2') || lower.includes('iec62196')) return 'Type 2'
   if (lower.includes('type 1') || lower.includes('type1') || lower.includes('j1772') || lower.includes('sae j1772')) return 'Type 1'
-  if (lower.includes('schuko') || lower.includes('standard outlet') || lower.includes('household') || lower.includes('cee 7/4') || lower.includes('cee7/4')) return 'Schuko'
-  if (lower.includes('bs 1363') || lower.includes('bs1363') || lower.includes('type g') || lower.includes('uk 3-pin') || lower.includes('uk plug')) return 'UK'
-  if (lower.includes('nema') || lower.includes('type a') || lower.includes('type b') || lower.includes('us standard') || lower.includes('american plug')) return 'US'
-  if (lower.includes('sev 1011') || lower.includes('sev1011') || lower.includes('type j') || lower.includes('swiss')) return 'Swiss'
-  if (lower.includes('type e') || lower.includes('french') || lower.includes('belgian') || lower.includes('cee 7/5') || lower.includes('cee7/5')) return 'French'
-  if (lower.includes('cee blue') || lower.includes('cee 16a') || lower.includes('camping') || lower.includes('ceeform')) return 'CEE Blue'
+  if (lower.includes('schuko') || lower.includes('standard outlet') || lower.includes('cee 7/4') || lower.includes('cee7/4')) return 'Schuko'
+  if (lower.includes('bs 1363') || lower.includes('bs1363') || lower.includes('uk 3-pin') || lower.includes('uk plug') || lower === 'type g') return 'UK'
+  if (lower.includes('nema') || lower.includes('us standard') || lower.includes('american plug') || lower === 'type a' || lower === 'type b') return 'US'
+  if (lower.includes('sev 1011') || lower.includes('sev1011') || lower.includes('type j / sev') || lower.includes('swiss outlet')) return 'Swiss'
+  if (lower.includes('french outlet') || lower.includes('belgian outlet') || lower.includes('cee 7/5') || lower.includes('cee7/5') || lower === 'type e') return 'French'
+  if (lower.includes('cee blue') || lower.includes('cee 16a') || lower.includes('ceeform') || lower.includes('camping plug')) return 'CEE Blue'
 
   return 'Other'
 }
