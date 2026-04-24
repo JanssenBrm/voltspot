@@ -15,7 +15,7 @@ import {
   CircleDollarSign,
   Wallet,
 } from 'lucide-react'
-import { PLUG_COLORS, PLUG_ICONS } from '@/lib/plugTypes'
+import { PLUG_COLORS, PLUG_FRIENDLY_NAMES, PLUG_ICONS, PlugType } from '@/lib/plugTypes'
 import Image from 'next/image'
 
 async function getStation(id: string) {
@@ -148,7 +148,7 @@ export default async function StationDetailPage({ params }: { params: { id: stri
                   key={pt}
                   className={`text-xs px-2.5 py-1 rounded-xl border border-border/60 font-medium ${PLUG_COLORS[pt] ?? PLUG_COLORS.Other}`}
                 >
-                  {PLUG_ICONS[pt] ?? '🔌'} {pt}
+                  {PLUG_ICONS[pt] ?? '🔌'} {PLUG_FRIENDLY_NAMES[pt as PlugType] ?? pt}
                 </span>
               ))}
             </div>

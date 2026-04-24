@@ -22,7 +22,7 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { PLUG_COLORS, PLUG_ICONS } from '@/lib/plugTypes'
+import { PLUG_COLORS, PLUG_FRIENDLY_NAMES, PLUG_ICONS, PlugType } from '@/lib/plugTypes'
 import { calculateDistanceMeters } from '@/lib/geo'
 import CheckInModal from '@/components/stations/CheckInModal'
 import ClaimButton from '@/components/stations/ClaimButton'
@@ -40,7 +40,7 @@ interface StationDetail {
   status: string | null
   isFree: boolean | null
   isIndoor: boolean | null
-  plugTypes: string[] | null
+  plugTypes: PlugType[] | null
   accessNotes: string | null
   claimedBy: string | null
   claimedAt: string | null
@@ -236,7 +236,7 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
                         key={pt}
                         className={`text-xs px-2.5 py-1 rounded-xl font-medium border border-border/60 ${PLUG_COLORS[pt] ?? PLUG_COLORS.Other}`}
                       >
-                        {PLUG_ICONS[pt] ?? '🔌'} {pt}
+                        {PLUG_ICONS[pt] ?? '🔌'} {PLUG_FRIENDLY_NAMES[pt] ?? pt}
                       </span>
                     ))}
                   </div>
