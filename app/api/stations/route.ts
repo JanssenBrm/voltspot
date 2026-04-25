@@ -132,7 +132,6 @@ export async function POST(req: NextRequest) {
         isIndoor: payload.isIndoor,
         accessNotes: payload.accessNotes,
         source: 'user',
-        status: 'unverified',
       })
       .returning()
     station = inserted
