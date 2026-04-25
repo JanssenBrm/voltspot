@@ -111,14 +111,13 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
     return NextResponse.json({ request, queued: true }, { status: 202 })
   }
 
-  await db.transaction(async (tx) => {
-    await tx
-      .update(stationChangeRequests)
-      .set({ stationId: null, updatedAt: new Date() })
-      .where(eq(stationChangeRequests.stationId, params.id))
-    await tx.delete(checkIns).where(eq(checkIns.stationId, params.id))
-    await tx.delete(stations).where(eq(stations.id, params.id))
-  })
+  // neon-http driver does not support transactions, so execute in FK-safe order.
+  await db
+    .update(stationChangeRequests)
+    .set({ stationId: null, updatedAt: new Date() })
+    .where(eq(stationChangeRequests.stationId, params.id))
+  await db.delete(checkIns).where(eq(checkIns.stationId, params.id))
+  await db.delete(stations).where(eq(stations.id, params.id))
 
   return NextResponse.json({ success: true })
 }
