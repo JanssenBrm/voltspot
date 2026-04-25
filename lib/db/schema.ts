@@ -34,7 +34,6 @@ export const stations = pgTable('stations', {
   isFree: boolean('is_free'),
   isIndoor: boolean('is_indoor'),
   accessNotes: text('access_notes'),
-  status: text('status').default('unverified'),
   claimedBy: text('claimed_by').references(() => users.id),
   claimedAt: timestamp('claimed_at'),
   pioneerUserId: text('pioneer_user_id').references(() => users.id),

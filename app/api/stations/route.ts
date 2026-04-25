@@ -14,7 +14,6 @@ export async function GET(req: NextRequest) {
   const bbox = searchParams.get('bbox')
   const plugType = searchParams.get('plugType')
   const freeOnly = searchParams.get('freeOnly') === 'true'
-  const verifiedOnly = searchParams.get('verifiedOnly') === 'true'
   const indoorOnly = searchParams.get('indoorOnly') === 'true'
 
   const conditions = []
@@ -29,7 +28,6 @@ export async function GET(req: NextRequest) {
     )
   }
   if (freeOnly) conditions.push(eq(stations.isFree, true))
-  if (verifiedOnly) conditions.push(eq(stations.status, 'verified'))
   if (indoorOnly) conditions.push(eq(stations.isIndoor, true))
   if (plugType) conditions.push(sql`${plugType} = ANY(${stations.plugTypes})`)
 
@@ -39,7 +37,6 @@ export async function GET(req: NextRequest) {
       name: stations.name,
       latitude: stations.latitude,
       longitude: stations.longitude,
-      status: stations.status,
       isFree: stations.isFree,
       plugTypes: stations.plugTypes,
       claimedBy: stations.claimedBy,

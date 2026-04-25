@@ -18,7 +18,6 @@ const VoltMap = dynamic(() => import('@/components/map/VoltMap'), { ssr: false }
 const DEFAULT_FILTERS: Filters = {
   plugType: 'all',
   freeOnly: false,
-  verifiedOnly: false,
   indoorOnly: false,
 }
 
@@ -46,7 +45,6 @@ export default function HomePage() {
     const params = new URLSearchParams({ bbox: currentBbox })
     if (currentFilters.plugType !== 'all') params.set('plugType', currentFilters.plugType)
     if (currentFilters.freeOnly) params.set('freeOnly', 'true')
-    if (currentFilters.verifiedOnly) params.set('verifiedOnly', 'true')
     if (currentFilters.indoorOnly) params.set('indoorOnly', 'true')
     const res = await fetch(`/api/stations?${params}`)
     if (res.ok) setStations(await res.json())

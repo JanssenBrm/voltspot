@@ -6,9 +6,6 @@ import {
   MapPin,
   Navigation,
   Star,
-  CheckCircle,
-  AlertCircle,
-  XCircle,
   Flag,
   Home,
   Trees,
@@ -34,30 +31,10 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   }
 }
 
-const STATUS_CONFIG: Record<string, { icon: any; badgeClass: string; label: string }> = {
-  verified: {
-    icon: CheckCircle,
-    label: 'Verified',
-    badgeClass: 'border-transparent bg-emerald-600 text-white',
-  },
-  unverified: {
-    icon: AlertCircle,
-    label: 'Unverified',
-    badgeClass: 'border-transparent bg-amber-500 text-white',
-  },
-  offline: {
-    icon: XCircle,
-    label: 'Offline',
-    badgeClass: 'border-transparent bg-red-600 text-white',
-  },
-}
-
 export default async function StationDetailPage({ params }: { params: { id: string } }) {
   const station = await getStation(params.id)
   if (!station) notFound()
 
-  const statusCfg = STATUS_CONFIG[station.status ?? 'unverified'] ?? STATUS_CONFIG.unverified
-  const StatusIcon = statusCfg.icon
   const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
   const mapImageUrl = mapboxToken
     ? `https://api.mapbox.com/styles/v1/mapbox/light-v11/static/pin-s+22c55e(${station.longitude},${station.latitude})/${station.longitude},${station.latitude},14,0/600x300?access_token=${mapboxToken}`
@@ -109,15 +86,8 @@ export default async function StationDetailPage({ params }: { params: { id: stri
           </p>
         </div>
 
-        {/* Status + badges */}
+        {/* Badges */}
         <div className="flex flex-wrap gap-2 rounded-2xl border border-border/70 bg-muted/30 p-3">
-          <Badge
-            variant="outline"
-            className={`h-7 rounded-full gap-1.5 px-3 text-xs font-medium ${statusCfg.badgeClass}`}
-          >
-            <StatusIcon className="h-4 w-4" />
-            {statusCfg.label}
-          </Badge>
           {station.isFree != null && (
             <Badge
               variant={station.isFree ? 'default' : 'secondary'}

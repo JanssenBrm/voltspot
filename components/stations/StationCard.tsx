@@ -10,21 +10,13 @@ interface StationCardProps {
     name: string
     city: string | null
     country: string | null
-    status: string | null
     isFree: boolean | null
     plugTypes: string[] | null
     claimedBy: string | null
   }
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  verified: 'border-transparent bg-emerald-600 text-white',
-  unverified: 'border-transparent bg-amber-500 text-white',
-  offline: 'border-transparent bg-red-600 text-white',
-}
-
 export default function StationCard({ station }: StationCardProps) {
-  const statusColor = STATUS_COLORS[station.status ?? 'unverified'] ?? STATUS_COLORS.unverified
 
   return (
     <div className="rounded-xl border bg-card p-4 space-y-3 hover:shadow-md transition-shadow">
@@ -39,9 +31,6 @@ export default function StationCard({ station }: StationCardProps) {
       </div>
 
       <div className="flex flex-wrap gap-1.5">
-        <Badge variant="outline" className={`h-7 rounded-full gap-1.5 px-3 text-xs font-medium ${statusColor}`}>
-          {station.status ?? 'unverified'}
-        </Badge>
         {station.isFree != null && (
           <Badge
             variant={station.isFree ? 'default' : 'secondary'}

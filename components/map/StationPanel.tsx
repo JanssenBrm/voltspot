@@ -7,9 +7,6 @@ import {
   Star,
   Zap,
   Navigation,
-  CheckCircle,
-  AlertCircle,
-  XCircle,
   ExternalLink,
   Edit,
   Trash2,
@@ -42,7 +39,6 @@ interface StationDetail {
   city: string | null
   country: string | null
   countryCode: string | null
-  status: string | null
   isFree: boolean | null
   isIndoor: boolean | null
   plugTypes: PlugType[] | null
@@ -66,24 +62,6 @@ interface StationPanelProps {
   stationId: string
   onClose: () => void
   userId: string | null
-}
-
-const STATUS_CONFIG = {
-  verified: {
-    icon: CheckCircle,
-    label: 'Verified',
-    badgeClass: 'border-transparent bg-emerald-600 text-white',
-  },
-  unverified: {
-    icon: AlertCircle,
-    label: 'Unverified',
-    badgeClass: 'border-transparent bg-amber-500 text-white',
-  },
-  offline: {
-    icon: XCircle,
-    label: 'Offline',
-    badgeClass: 'border-transparent bg-red-600 text-white',
-  },
 }
 
 const MAX_CHECKIN_DISTANCE_METERS = 100
@@ -137,8 +115,6 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
     return () => navigator.geolocation.clearWatch(watchId)
   }, [])
 
-  const statusCfg = STATUS_CONFIG[(station?.status as keyof typeof STATUS_CONFIG) ?? 'unverified'] ?? STATUS_CONFIG.unverified
-  const StatusIcon = statusCfg.icon
   const cityCountryLabel = [station?.city, station?.country].filter(Boolean).join(', ')
   const locationLabel =
     cityCountryLabel ||
@@ -223,36 +199,31 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
             </div>
           ) : station ? (
             <>
-              {/* Status + badges */}
-              <div className="flex flex-wrap gap-2 bg-muted/30 py-3">
-                <Badge
-                  variant="outline"
-                  className={`h-7 rounded-full gap-1.5 px-3 text-xs font-medium ${statusCfg.badgeClass}`}
-                >
-                  <StatusIcon className="h-4 w-4" />
-                  {statusCfg.label}
-                </Badge>
-                {station.isFree != null && (
-                  <Badge
-                    variant={station.isFree ? 'default' : 'secondary'}
-                    className={station.isFree
-                      ? 'h-7 rounded-full gap-1.5 px-3 text-xs font-medium border-transparent bg-emerald-600 text-white'
-                      : 'h-7 rounded-full gap-1.5 px-3 text-xs font-medium border border-border/70 bg-secondary text-secondary-foreground'}
-                  >
-                    {station.isFree ? <CircleDollarSign className="h-3 w-3" /> : <Wallet className="h-3 w-3" />}
-                    {station.isFree ? 'Free to use' : 'Paid'}
-                  </Badge>
-                )}
-                {station.isIndoor != null && (
-                  <Badge
-                    variant="outline"
-                    className="h-7 rounded-full gap-1.5 px-3 text-xs font-medium border border-border/70 bg-background/80"
-                  >
-                    {station.isIndoor ? <Home className="h-3 w-3" /> : <Trees className="h-3 w-3" />}
-                    {station.isIndoor ? 'Indoor' : 'Outdoor'}
-                  </Badge>
-                )}
-              </div>
+              {/* Badges */}
+              {(station.isFree != null || station.isIndoor != null) && (
+                <div className="flex flex-wrap gap-2 bg-muted/30 py-1">
+                  {station.isFree != null && (
+                    <Badge
+                      variant={station.isFree ? 'default' : 'secondary'}
+                      className={station.isFree
+                        ? 'h-7 rounded-full gap-1.5 px-3 text-xs font-medium border-transparent bg-emerald-600 text-white'
+                        : 'h-7 rounded-full gap-1.5 px-3 text-xs font-medium border border-border/70 bg-secondary text-secondary-foreground'}
+                    >
+                      {station.isFree ? <CircleDollarSign className="h-3 w-3" /> : <Wallet className="h-3 w-3" />}
+                      {station.isFree ? 'Free to use' : 'Paid'}
+                    </Badge>
+                  )}
+                  {station.isIndoor != null && (
+                    <Badge
+                      variant="outline"
+                      className="h-7 rounded-full gap-1.5 px-3 text-xs font-medium border border-border/70 bg-background/80"
+                    >
+                      {station.isIndoor ? <Home className="h-3 w-3" /> : <Trees className="h-3 w-3" />}
+                      {station.isIndoor ? 'Indoor' : 'Outdoor'}
+                    </Badge>
+                  )}
+                </div>
+              )}
 
               {/* Plug types */}
               <div className="space-y-1.5">

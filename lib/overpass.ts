@@ -109,7 +109,6 @@ export function mapOverpassToStation(element: OverpassElement) {
     isFree: tags.fee === 'no' ? true : tags.fee === 'yes' ? false : null,
     isIndoor: tags.indoor ? tags.indoor === 'yes' : null,
     accessNotes: tags.access ?? null,
-    status: 'unverified' as const,
     source: 'osm' as const,
   }
 }

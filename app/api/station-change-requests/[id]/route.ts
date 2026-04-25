@@ -52,7 +52,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         accessNotes: payload.accessNotes,
         photos: payload.photos,
         source: 'user',
-        status: 'unverified',
       })
     }
 

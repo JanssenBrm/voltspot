@@ -11,7 +11,6 @@ import { ALL_PLUG_TYPES, PLUG_FRIENDLY_NAMES, PLUG_ICONS } from '@/lib/plugTypes
 export interface Filters {
   plugType: string
   freeOnly: boolean
-  verifiedOnly: boolean
   indoorOnly: boolean
 }
 
@@ -28,7 +27,6 @@ export default function MapFilters({ filters, onFiltersChange }: MapFiltersProps
   const activeCount = [
     filters.plugType !== 'all',
     filters.freeOnly,
-    filters.verifiedOnly,
     filters.indoorOnly,
   ].filter(Boolean).length
 
@@ -68,7 +66,6 @@ export default function MapFilters({ filters, onFiltersChange }: MapFiltersProps
           {(
             [
               ['freeOnly', 'Free stations only'],
-              ['verifiedOnly', 'Verified stations only'],
               ['indoorOnly', 'Indoor stations only'],
             ] as const
           ).map(([key, label]) => (
@@ -87,7 +84,7 @@ export default function MapFilters({ filters, onFiltersChange }: MapFiltersProps
               variant="ghost"
               size="sm"
               className="w-full h-7 text-xs"
-              onClick={() => update({ plugType: 'all', freeOnly: false, verifiedOnly: false, indoorOnly: false })}
+              onClick={() => update({ plugType: 'all', freeOnly: false, indoorOnly: false })}
             >
               Clear filters
             </Button>

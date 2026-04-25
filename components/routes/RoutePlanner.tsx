@@ -35,7 +35,6 @@ interface StationStop {
   longitude: number
   city: string | null
   country: string | null
-  status: string | null
   isFree: boolean | null
   plugTypes: string[] | null
   claimedBy: string | null
@@ -189,11 +188,7 @@ export default function RoutePlanner({ initialStationId }: RoutePlannerProps = {
                 onClick={() => addStop(s)}
               >
                 <span className="font-medium">{s.name}</span>
-                {s.status && (
-                  <span className={`ml-2 text-xs ${s.status === 'verified' ? 'text-green-500' : s.status === 'offline' ? 'text-red-500' : 'text-yellow-500'}`}>
-                    ● {s.status}
-                  </span>
-                )}
+
               </button>
             ))}
           </div>

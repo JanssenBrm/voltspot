@@ -20,7 +20,6 @@ export interface StationMarkerData {
   name: string
   latitude: number
   longitude: number
-  status: string | null
   isFree: boolean | null
   plugTypes: string[] | null
   claimedBy: string | null
@@ -36,8 +35,6 @@ interface VoltMapProps {
 
 function getStationColor(station: StationMarkerData): string {
   if (station.claimedBy) return '#3b82f6'
-  if (station.status === 'verified') return '#22c55e'
-  if (station.status === 'offline') return '#ef4444'
   return '#eab308'
 }
 

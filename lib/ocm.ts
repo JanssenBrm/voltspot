@@ -79,7 +79,6 @@ export function mapOCMToStation(s: OCMStation) {
     countryCode: s.AddressInfo.Country?.ISOCode ?? null,
     plugTypes: plugTypes.length > 0 ? plugTypes : null,
     isFree,
-    status: 'unverified' as const,
     source: 'ocm' as const,
   }
 }
