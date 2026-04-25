@@ -5,6 +5,16 @@ import { auth } from '@clerk/nextjs/server'
 import { db } from '@/lib/db'
 import { users } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
+import { getAuthUser } from '@/lib/auth'
+
+export async function GET() {
+  // getAuthUser() provisions the DB row on first request if it doesn't exist yet
+  // (handles the case where the Clerk webhook was never delivered, e.g. preview branches)
+  const user = await getAuthUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  return NextResponse.json({ id: user.id, role: user.role })
+}
 
 export async function PATCH(req: NextRequest) {
   const { userId } = await auth()

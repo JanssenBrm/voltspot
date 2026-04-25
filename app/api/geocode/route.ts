@@ -29,7 +29,10 @@ export async function GET(req: NextRequest) {
       )
       if (!res.ok) return NextResponse.json({ error: 'Reverse geocoding failed' }, { status: 502 })
       const data = await res.json()
-      return NextResponse.json(data ?? null)
+      if (!data || data.error || !data.display_name) {
+        return NextResponse.json({ error: 'No address found for this location' }, { status: 404 })
+      }
+      return NextResponse.json(data)
     }
 
     return NextResponse.json({ error: 'Provide q or lat/lng query params' }, { status: 400 })

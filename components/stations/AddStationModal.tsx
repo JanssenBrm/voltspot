@@ -52,6 +52,7 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
   const [showMapPicker, setShowMapPicker] = useState(false)
   const [mapViewLat, setMapViewLat] = useState<number | undefined>()
   const [mapViewLng, setMapViewLng] = useState<number | undefined>()
+  const [fieldErrors, setFieldErrors] = useState<{ name?: string; location?: string }>({})
   const fileRef = useRef<HTMLInputElement>(null)
   const brandOptions = useMemo(() => [...BIKE_BRAND_OPTIONS, ...customBrands], [customBrands])
 
@@ -61,14 +62,21 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
     try {
       const res = await fetch(`/api/geocode?lat=${encodeURIComponent(nextLat)}&lng=${encodeURIComponent(nextLng)}`)
       const data = await res.json()
-      if (data?.display_name) setAddress(data.display_name)
-    } catch { /**/ }
+      if (!res.ok || !data?.display_name) {
+        toast.warning('Could not resolve an address for this location. You can enter it manually.')
+      } else {
+        setAddress(data.display_name)
+      }
+    } catch {
+      toast.warning('Could not resolve an address for this location. You can enter it manually.')
+    }
     setAddressLoading(false)
   }, [])
 
   const setCoordinates = useCallback((nextLat: string, nextLng: string) => {
     setLat(nextLat)
     setLng(nextLng)
+    setFieldErrors((prev) => ({ ...prev, location: undefined }))
     void reverseGeocode(nextLat, nextLng)
   }, [reverseGeocode])
 
@@ -145,10 +153,14 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
   }
 
   const submit = async () => {
-    if (!name.trim() || !lat || !lng) {
-      toast.error('Name and location are required')
+    const newErrors: { name?: string; location?: string } = {}
+    if (!name.trim()) newErrors.name = 'Please enter a station name'
+    if (!lat || !lng) newErrors.location = 'Please select a location using one of the buttons above'
+    if (Object.keys(newErrors).length) {
+      setFieldErrors(newErrors)
       return
     }
+    setFieldErrors({})
     const compatibilityOptions = supportsAllBrands
       ? [BYO_CHARGER_OPTION, 'All e-bike brands']
       : supportedBrands
@@ -169,8 +181,13 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
           accessNotes: accessNotes || undefined,
         }),
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Failed')
+      let data: { error?: string; station?: { id: string }; queued?: boolean } = {}
+      try {
+        data = await res.json()
+      } catch {
+        throw new Error('Failed to add station. Please try again.')
+      }
+      if (!res.ok) throw new Error(data.error ?? 'Failed to add station. Please try again.')
 
       // Upload photos
       if (photos.length && data.station?.id) {
@@ -179,11 +196,15 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
         await fetch(`/api/stations/${data.station.id}/photos`, { method: 'POST', body: fd })
       }
 
-      toast.success('Station added! +30 points ⚡')
+      if (res.status === 202) {
+        toast.success('Thanks! Your station request was submitted for review.')
+      } else {
+        toast.success('Station added! +30 points ⚡')
+      }
       onAdded()
       onClose()
     } catch (err: any) {
-      toast.error(err.message)
+      toast.error(err?.message || 'Failed to add station. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -199,24 +220,25 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
           <div className="space-y-2">
             <Label>Station Name *</Label>
             <Input
-              className="h-11 rounded-xl"
+              className={`h-11 rounded-xl ${fieldErrors.name ? 'border-destructive focus-visible:ring-destructive' : ''}`}
               placeholder="e.g. City Centre Charging Hub"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => { setName(e.target.value); if (e.target.value.trim()) setFieldErrors((prev) => ({ ...prev, name: undefined })) }}
             />
+            {fieldErrors.name && <p className="text-xs text-destructive">{fieldErrors.name}</p>}
           </div>
 
-          <div className="space-y-2 rounded-2xl border border-border/70 p-4 bg-muted/20">
+          <div className={`space-y-2 rounded-2xl border p-4 bg-muted/20 ${fieldErrors.location ? 'border-destructive' : 'border-border/70'}`}>
             <Label>Location *</Label>
             <p className="text-xs text-muted-foreground">
               Choose your location and we&apos;ll fill in the address automatically.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <Button type="button" variant="outline" className="h-11 px-5 rounded-xl" onClick={useCurrentLocation} disabled={locating}>
+              <Button type="button" variant="outline" className="h-11 p-4 rounded-xl" onClick={useCurrentLocation} disabled={locating}>
                 <Navigation className="h-4 w-4 mr-1.5" />
                 {locating ? 'Locating...' : 'Use my location'}
               </Button>
-              <Button type="button" variant="outline" className="h-11 px-5 rounded-xl" onClick={openMapPicker}>
+              <Button type="button" variant="outline" className="h-11 p-4 rounded-xl" onClick={openMapPicker}>
                 <MapPin className="h-4 w-4 mr-1.5" />
                 {showMapPicker ? 'Hide map picker' : 'Drop a pin on map'}
               </Button>
@@ -235,21 +257,26 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
                 />
               </div>
             )}
-            {(lat || lng) && (
+            {(lat || lng) ? (
               <p className="text-xs text-muted-foreground">
                 Location selected ✓
               </p>
-            )}
+            ) : fieldErrors.location ? (
+              <p className="text-xs text-destructive">{fieldErrors.location}</p>
+            ) : null}
           </div>
 
           <div className="space-y-2">
-            <Label>Address</Label>
+            <Label>Address <span className="text-muted-foreground font-normal">(optional)</span></Label>
             <Input
               className="h-11 rounded-xl px-4"
-              placeholder={addressLoading ? 'Resolving address...' : 'Address is derived from selected location'}
+              placeholder={addressLoading ? 'Resolving address...' : 'Auto-filled from location — or enter manually'}
               value={address}
               onChange={(e) => setAddress(e.target.value)}
             />
+            <p className="text-xs text-muted-foreground">
+              No specific format required. You can enter any recognisable description of the address.
+            </p>
           </div>
 
           <div className="space-y-3 rounded-2xl border border-border/70 p-4 bg-muted/20">
@@ -293,7 +320,7 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
                       }
                     }}
                   />
-                  <Button type="button" variant="outline" className="h-11 px-5 rounded-xl" onClick={addCustomBrand}>
+                  <Button type="button" variant="outline" className="h-11 p-4 rounded-xl" onClick={addCustomBrand}>
                     <Plus className="h-4 w-4 mr-1" />
                     Add
                   </Button>
@@ -350,14 +377,14 @@ export default function AddStationModal({ open, onClose, onAdded, initialLat, in
               className="hidden"
               onChange={(e) => handleFiles(e.target.files)}
             />
-            <Button variant="outline" className="w-full h-11 px-5 rounded-xl" onClick={() => fileRef.current?.click()}>
+            <Button variant="outline" className="w-full h-11 p-4 rounded-xl" onClick={() => fileRef.current?.click()}>
               {photos.length ? `${photos.length} photo(s) selected` : 'Choose photos'}
             </Button>
           </div>
 
           <div className="flex gap-2 pt-2">
-            <Button variant="outline" onClick={onClose} className="flex-1 h-11 px-5 rounded-xl">Cancel</Button>
-            <Button onClick={submit} disabled={loading} className="flex-1 h-11 px-5 rounded-xl">
+            <Button variant="outline" onClick={onClose} className="flex-1 h-11 p-4 rounded-xl">Cancel</Button>
+            <Button onClick={submit} disabled={loading} className="flex-1 h-11 p-4 rounded-xl">
               {loading ? 'Adding...' : 'Add Station'}
             </Button>
           </div>

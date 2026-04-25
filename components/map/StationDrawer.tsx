@@ -14,6 +14,7 @@ export default function StationDrawer({ stationId, onClose, userId }: StationDra
     <Sheet open={!!stationId} onOpenChange={(o) => !o && onClose()}>
       <SheetContent
         side="bottom"
+        showCloseButton={false}
         className="h-[78vh] p-0 rounded-t-3xl border-x border-t border-border/70 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/90"
       >
         {stationId && (

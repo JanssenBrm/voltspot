@@ -12,10 +12,12 @@ import {
   XCircle,
   ExternalLink,
   Edit,
+  Trash2,
   Home,
   Trees,
   CircleDollarSign,
   Wallet,
+  Flag,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -26,8 +28,10 @@ import { PLUG_COLORS, PLUG_FRIENDLY_NAMES, PLUG_ICONS, PlugType } from '@/lib/pl
 import { calculateDistanceMeters } from '@/lib/geo'
 import CheckInModal from '@/components/stations/CheckInModal'
 import ClaimButton from '@/components/stations/ClaimButton'
+import EditStationModal from '@/components/stations/EditStationModal'
 import Image from 'next/image'
-import Link from 'next/link'
+import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
 
 interface StationDetail {
   id: string
@@ -37,6 +41,7 @@ interface StationDetail {
   address: string | null
   city: string | null
   country: string | null
+  countryCode: string | null
   status: string | null
   isFree: boolean | null
   isIndoor: boolean | null
@@ -84,9 +89,11 @@ const STATUS_CONFIG = {
 const MAX_CHECKIN_DISTANCE_METERS = 100
 
 export default function StationPanel({ stationId, onClose, userId }: StationPanelProps) {
+  const router = useRouter()
   const [station, setStation] = useState<StationDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [checkInOpen, setCheckInOpen] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
   const [photoIdx, setPhotoIdx] = useState(0)
   const [userCoords, setUserCoords] = useState<{ latitude: number; longitude: number } | null>(null)
   const [locationError, setLocationError] = useState<string | null>(null)
@@ -155,6 +162,24 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
     fetch(`/api/stations/${stationId}`)
       .then((r) => r.json())
       .then(setStation)
+  }
+
+  const suggestEdit = () => setEditOpen(true)
+
+  const requestRemoval = async () => {
+    if (!window.confirm('Request removal of this station?')) return
+    const res = await fetch(`/api/stations/${stationId}`, { method: 'DELETE' })
+    const data = await res.json()
+    if (!res.ok) {
+      toast.error(data.error ?? 'Could not request removal')
+      return
+    }
+    if (res.status === 202) {
+      toast.success('Removal request submitted for review')
+      return
+    }
+    toast.success('Station deleted')
+    onClose()
   }
 
   return (
@@ -293,7 +318,7 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
               {/* Action buttons */}
               <div className="flex flex-col gap-2">
                 <Button
-                  className="w-full h-10 rounded-xl shadow-sm hover:shadow"
+                  className="w-full p-5 rounded-xl shadow-sm hover:shadow"
                   onClick={() => setCheckInOpen(true)}
                   disabled={!canCheckIn}
                 >
@@ -311,32 +336,33 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
                 )}
 
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="flex-1 h-9 rounded-xl" asChild>
-                    <a
-                      href={`https://www.google.com/maps/dir/?api=1&destination=${station.latitude},${station.longitude}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Navigation className="h-3 w-3 mr-1" />
-                      Directions
-                    </a>
+                  <Button
+                    variant="outline"
+                    className="flex-1 p-5 rounded-xl"
+                    onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${station.latitude},${station.longitude}`, '_blank', 'noopener,noreferrer')}
+                  >
+                    <Navigation className="h-3 w-3 mr-1" />
+                    Directions
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1 h-9 rounded-xl" asChild>
-                    <Link href={`/stations/${station.id}`}>
-                      <ExternalLink className="h-3 w-3 mr-1" />
-                      Full Page
-                    </Link>
+                  <Button
+                    variant="outline"
+                    className="flex-1 p-5 rounded-xl"
+                    onClick={() => { onClose(); router.push(`/stations/${station.id}`) }}
+                  >
+                    <ExternalLink className="h-3 w-3 mr-1" />
+                    Full Page
                   </Button>
                 </div>
 
-                {userId === station.claimedBy && (
-                  <Button variant="ghost" size="sm" className="rounded-xl p-4" asChild>
-                    <Link href={`/stations/${station.id}?edit=1`}>
-                      <Edit className="h-3 w-3 mr-1" />
-                      Edit Station
-                    </Link>
-                  </Button>
-                )}
+                <Button variant="ghost" className="rounded-xl p-5" onClick={suggestEdit}>
+                  <Edit className="h-3 w-3 mr-1" />
+                  Suggest Edit
+                </Button>
+
+                <Button variant="ghost" className="rounded-xl p-5 text-destructive hover:text-destructive" onClick={requestRemoval}>
+                  <Trash2 className="h-3 w-3 mr-1" />
+                  Request Removal
+                </Button>
               </div>
 
               {/* Check-ins */}
@@ -374,10 +400,13 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
                 </div>
               )}
 
-              <Button variant="ghost" size="sm" className="w-full text-destructive hover:text-destructive hover:bg-red-100 rounded-xl p-4" asChild>
-                <Link href={`/stations/${station.id}?report=1`}>
-                  Report an Issue
-                </Link>
+              <Button
+                variant="ghost"
+                className="w-full p-5 rounded-xl text-destructive hover:text-destructive hover:bg-red-100"
+                onClick={() => { onClose(); router.push(`/stations/${station.id}?report=1`) }}
+              >
+                <Flag className="h-3 w-3 mr-1" />
+                Report an Issue
               </Button>
             </>
           ) : (
@@ -394,6 +423,15 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
           userId={userId}
           userLatitude={userCoords?.latitude ?? null}
           userLongitude={userCoords?.longitude ?? null}
+        />
+      )}
+
+      {station && editOpen && (
+        <EditStationModal
+          open={editOpen}
+          onClose={() => setEditOpen(false)}
+          onSaved={refresh}
+          station={station}
         />
       )}
     </div>

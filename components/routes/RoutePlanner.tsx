@@ -176,7 +176,7 @@ export default function RoutePlanner({ initialStationId }: RoutePlannerProps = {
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && doSearch()}
           />
-          <Button variant="outline" onClick={doSearch} disabled={searching}>
+          <Button variant="outline" onClick={doSearch} disabled={searching} className="p-4">
             <Search className="h-4 w-4" />
           </Button>
         </div>
@@ -223,7 +223,7 @@ export default function RoutePlanner({ initialStationId }: RoutePlannerProps = {
         <Switch checked={isPublic} onCheckedChange={setIsPublic} />
       </div>
 
-      <Button onClick={save} disabled={loading || stops.length < 2} className="w-full" size="lg">
+      <Button onClick={save} disabled={loading || stops.length < 2} className="w-full p-4" size="lg">
         {loading ? 'Saving...' : `Save Route${stops.length >= 2 ? ` (${stops.length} stops)` : ''}`}
       </Button>
 

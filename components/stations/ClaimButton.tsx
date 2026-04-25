@@ -42,7 +42,7 @@ export default function ClaimButton({ stationId, onClaimed }: ClaimButtonProps) 
 
   if (claimed) {
     return (
-      <Button variant="outline" className="w-full text-green-600" disabled>
+      <Button variant="outline" className="w-full p-4 text-green-600" disabled>
         <Flag className="h-4 w-4 mr-2" />
         You own this station!
       </Button>
@@ -50,7 +50,7 @@ export default function ClaimButton({ stationId, onClaimed }: ClaimButtonProps) 
   }
 
   return (
-    <Button variant="outline" className="w-full" onClick={claim} disabled={loading}>
+    <Button variant="outline" className="w-full p-4" onClick={claim} disabled={loading}>
       <Flag className="h-4 w-4 mr-2" />
       {loading ? 'Claiming...' : 'Claim This Station'}
     </Button>
