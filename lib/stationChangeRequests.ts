@@ -20,7 +20,7 @@ export type SanitizedStationPayload = {
   plugTypes?: string[]
   isFree?: boolean
   isIndoor?: boolean
-  accessNotes?: string
+  accessNotes?: string | null
   photos?: string[]
 }
 
@@ -77,7 +77,7 @@ export function sanitizeStationPayload(body: unknown, requestType: StationChange
     plugTypes: parseStringArray(source.plugTypes, 20, 60),
     isFree: parseBoolean(source.isFree),
     isIndoor: parseBoolean(source.isIndoor),
-    accessNotes: trimTo(source.accessNotes, 1000),
+    accessNotes: source.accessNotes === null ? null : trimTo(source.accessNotes, 1000),
     photos: parseStringArray(source.photos, 15, 500),
   }
 

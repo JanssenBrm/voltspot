@@ -141,7 +141,7 @@ export default function EditStationModal({ open, onClose, onSaved, station }: Ed
           plugTypes: plugTypes.length ? plugTypes : undefined,
           isFree,
           isIndoor,
-          accessNotes: accessNotes || undefined,
+          accessNotes: accessNotes.trim() || null,
         }),
       })
       const data = await res.json()
