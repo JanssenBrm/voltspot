@@ -7,17 +7,24 @@ import { toast } from 'sonner'
 
 interface ClaimButtonProps {
   stationId: string
+  canClaim: boolean
+  userLatitude: number | null
+  userLongitude: number | null
   onClaimed: () => void
 }
 
-export default function ClaimButton({ stationId, onClaimed }: ClaimButtonProps) {
+export default function ClaimButton({ stationId, canClaim, userLatitude, userLongitude, onClaimed }: ClaimButtonProps) {
   const [loading, setLoading] = useState(false)
   const [claimed, setClaimed] = useState(false)
 
   const claim = async () => {
     setLoading(true)
     try {
-      const res = await fetch(`/api/stations/${stationId}/claim`, { method: 'POST' })
+      const res = await fetch(`/api/stations/${stationId}/claim`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userLatitude, userLongitude }),
+      })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Failed to claim')
 
@@ -50,7 +57,12 @@ export default function ClaimButton({ stationId, onClaimed }: ClaimButtonProps) 
   }
 
   return (
-    <Button variant="outline" className="w-full p-4" onClick={claim} disabled={loading}>
+    <Button
+      variant="outline"
+      className="w-full p-4"
+      onClick={claim}
+      disabled={loading || !canClaim}
+    >
       <Flag className="h-4 w-4 mr-2" />
       {loading ? 'Claiming...' : 'Claim This Station'}
     </Button>

@@ -152,13 +152,14 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
       ? calculateDistanceMeters(userCoords.latitude, userCoords.longitude, station.latitude, station.longitude)
       : null
   const canCheckIn = distanceMeters != null && distanceMeters <= MAX_CHECKIN_DISTANCE_METERS
-  const checkInDisabledReason = locating
-    ? 'Checking your location...'
+  const canClaim = canCheckIn
+  const proximityDisabledReason = locating
+    ? 'Checking your location…'
     : locationError
       ? locationError
       : distanceMeters == null
-        ? `You need to be within ${MAX_CHECKIN_DISTANCE_METERS}m to check in.`
-        : `Move closer to the station to check in. You are ${Math.round(distanceMeters)}m away (max ${MAX_CHECKIN_DISTANCE_METERS}m).`
+        ? `You need to be within ${MAX_CHECKIN_DISTANCE_METERS}m to check in or claim this station.`
+        : `You are ${Math.round(distanceMeters)}m away — move within ${MAX_CHECKIN_DISTANCE_METERS}m to check in or claim this station.`
 
   const refresh = () => {
     fetch(`/api/stations/${stationId}`)
@@ -325,14 +326,21 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
                   <Zap className="h-4 w-4 mr-2" />
                   Check In
                 </Button>
-                {!canCheckIn && (
-                  <p className="text-xs text-muted-foreground rounded-xl border border-border/70 bg-muted/30 px-3 py-2">
-                    {checkInDisabledReason}
-                  </p>
-                )}
 
                 {!station.claimedBy && userId && (
-                  <ClaimButton stationId={station.id} onClaimed={refresh} />
+                  <ClaimButton
+                    stationId={station.id}
+                    canClaim={canClaim}
+                    userLatitude={userCoords?.latitude ?? null}
+                    userLongitude={userCoords?.longitude ?? null}
+                    onClaimed={refresh}
+                  />
+                )}
+
+                {(!canCheckIn || (!station.claimedBy && userId && !canClaim)) && (
+                  <p className="text-xs text-muted-foreground rounded-xl border border-border/70 bg-muted/30 px-3 py-2">
+                    {proximityDisabledReason}
+                  </p>
                 )}
 
                 <div className="flex gap-2">
