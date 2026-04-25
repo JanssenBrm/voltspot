@@ -4,8 +4,10 @@ import { Button } from '@/components/ui/button'
 import { MapPin, Navigation, Copy, User } from 'lucide-react'
 import StationCard from '@/components/stations/StationCard'
 
+const appBase = process.env.NEXTAUTH_URL ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+
 async function getRoute(id: string) {
-  const res = await fetch(`${process.env.NEXTAUTH_URL}/api/routes/${id}`, { cache: 'no-store' })
+  const res = await fetch(`${appBase}/api/routes/${id}`, { cache: 'no-store' })
   if (!res.ok) return null
   return res.json()
 }
@@ -13,7 +15,7 @@ async function getRoute(id: string) {
 async function getStations(ids: string[]) {
   const results = await Promise.all(
     ids.map((id) =>
-      fetch(`${process.env.NEXTAUTH_URL}/api/stations/${id}`, { cache: 'no-store' })
+      fetch(`${appBase}/api/stations/${id}`, { cache: 'no-store' })
         .then((r) => r.json())
         .catch(() => null),
     ),

@@ -7,7 +7,7 @@ import RouteCard from '@/components/routes/RouteCard'
 import { CalendarDays, CheckCircle } from 'lucide-react'
 
 async function getUser(id: string) {
-  const base = process.env.NEXTAUTH_URL ?? 'http://localhost:3000'
+  const base = process.env.NEXTAUTH_URL ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
   const res = await fetch(`${base}/api/users/${id}`, { cache: 'no-store' })
   if (!res.ok) return null
   return res.json()

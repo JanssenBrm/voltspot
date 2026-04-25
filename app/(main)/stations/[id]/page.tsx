@@ -16,7 +16,7 @@ import { PLUG_COLORS, PLUG_FRIENDLY_NAMES, PLUG_ICONS, PlugType } from '@/lib/pl
 import Image from 'next/image'
 
 async function getStation(id: string) {
-  const base = process.env.NEXTAUTH_URL ?? 'http://localhost:3000'
+  const base = process.env.NEXTAUTH_URL ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
   const res = await fetch(`${base}/api/stations/${id}`, { cache: 'no-store' })
   if (!res.ok) return null
   return res.json()
@@ -60,7 +60,7 @@ export default async function StationDetailPage({ params }: { params: { id: stri
       latitude: station.latitude,
       longitude: station.longitude,
     },
-    url: `${process.env.NEXTAUTH_URL}/stations/${station.id}`,
+    url: `${process.env.NEXTAUTH_URL ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')}/stations/${station.id}`,
   }
 
   return (
