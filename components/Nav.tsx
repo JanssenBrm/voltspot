@@ -1,21 +1,49 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useUser, useClerk, SignInButton } from '@clerk/nextjs'
-import { Map, User, Zap } from 'lucide-react'
+import { Map, ShieldCheck, User, Zap } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 
+const MODERATOR_ROLES = new Set(['admin', 'moderator', 'approved_member'])
+
 const NAV_ITEMS = [
   { href: '/', label: 'Map', icon: Map },
+  { href: '/moderation', label: 'Moderation', icon: ShieldCheck, moderatorOnly: true },
   { href: '/account', label: 'Account', icon: User },
 ]
+
+function useCanModerate(isSignedIn: boolean | undefined) {
+  const [canModerate, setCanModerate] = useState(false)
+
+  useEffect(() => {
+    if (!isSignedIn) {
+      setCanModerate(false)
+      return
+    }
+    fetch('/api/account')
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => setCanModerate(!!data?.role && MODERATOR_ROLES.has(data.role)))
+      .catch(() => setCanModerate(false))
+  }, [isSignedIn])
+
+  return canModerate
+}
 
 export function TopNav() {
   const pathname = usePathname()
   const { user, isSignedIn } = useUser()
+  const canModerate = useCanModerate(isSignedIn)
+
+  const visibleItems = NAV_ITEMS.filter(({ href, moderatorOnly }) => {
+    if (!isSignedIn && (href === '/moderation' || href === '/account')) return false
+    if (moderatorOnly && !canModerate) return false
+    return true
+  })
 
   return (
     <header className="hidden md:flex fixed top-0 left-0 right-0 z-50 h-14 items-center border-b bg-background/95 backdrop-blur px-4 gap-6">
@@ -25,7 +53,7 @@ export function TopNav() {
       </Link>
 
       <nav className="flex items-center gap-1 flex-1">
-        {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
+        {visibleItems.map(({ href, label, icon: Icon }) => (
           <Link
             key={href}
             href={href}
@@ -74,9 +102,10 @@ export function TopNav() {
 export function BottomNav() {
   const pathname = usePathname()
   const { isSignedIn } = useUser()
+  const canModerate = useCanModerate(isSignedIn)
 
   const items = isSignedIn
-    ? NAV_ITEMS
+    ? NAV_ITEMS.filter(({ moderatorOnly }) => !moderatorOnly || canModerate)
     : [...NAV_ITEMS.slice(0, 1), { href: '/sign-in', label: 'Sign In', icon: User }]
 
   return (

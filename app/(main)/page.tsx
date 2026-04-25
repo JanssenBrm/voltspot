@@ -12,7 +12,6 @@ import AddStationModal from '@/components/stations/AddStationModal'
 import StationPanel from '@/components/map/StationPanel'
 import type { StationMarkerData } from '@/components/map/VoltMap'
 import { toast } from 'sonner'
-import Link from 'next/link'
 
 const VoltMap = dynamic(() => import('@/components/map/VoltMap'), { ssr: false })
 
@@ -24,7 +23,7 @@ const DEFAULT_FILTERS: Filters = {
 }
 
 export default function HomePage() {
-  const { user, isSignedIn } = useUser()
+  const { user } = useUser()
   const [stations, setStations] = useState<StationMarkerData[]>([])
   const [selectedStation, setSelectedStation] = useState<StationMarkerData | null>(null)
   const [bbox, setBbox] = useState<string | null>(null)
@@ -66,12 +65,7 @@ export default function HomePage() {
   }, [])
 
   const handleAddClick = () => {
-    if (!isSignedIn) {
-      toast.info('Sign in to add a station', {
-        action: { label: 'Sign In', onClick: () => window.location.href = '/sign-in' },
-      })
-      return
-    }
+    toast.info('Station submissions are reviewed before publishing.')
     setAddOpen(true)
   }
 
@@ -117,7 +111,7 @@ export default function HomePage() {
       {/* Add Station FAB */}
       <Button
         size="lg"
-        className="absolute bottom-[5.25rem] right-2.5 md:bottom-6 md:right-4 rounded-full shadow-lg z-20 gap-2 h-14 w-14 md:h-10 md:w-auto p-0 md:px-3"
+        className="absolute bottom-[5.25rem] right-2.5 md:bottom-6 md:right-4 rounded-full shadow-lg z-20 gap-2 h-14 w-14 md:h-10 md:w-auto p-0 md:px-3 p-5"
         onClick={handleAddClick}
       >
         <Plus className="h-6 w-6 md:h-5 md:w-5" />
