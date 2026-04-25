@@ -1,3 +1,5 @@
+import { normalizePlugType } from './plugTypes'
+
 const OCM_BASE = 'https://api.openchargemap.io/v3/poi'
 
 // Keywords that identify car-only DC fast-charge connectors.
@@ -52,9 +54,14 @@ export async function fetchOCMStations(params: Record<string, string> = {}): Pro
 }
 
 export function mapOCMToStation(s: OCMStation) {
-  const plugTypes = (s.Connections ?? [])
-    .map((c) => c.ConnectionType?.Title)
-    .filter(Boolean) as string[]
+  const plugTypes = Array.from(
+    new Set(
+      (s.Connections ?? [])
+        .map((c) => c.ConnectionType?.Title)
+        .filter(Boolean)
+        .map((title) => normalizePlugType(title as string)),
+    ),
+  )
 
   const isFree =
     s.UsageCost == null ||

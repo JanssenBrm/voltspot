@@ -24,7 +24,7 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { PLUG_COLORS, PLUG_ICONS } from '@/lib/plugTypes'
+import { PLUG_COLORS, PLUG_FRIENDLY_NAMES, PLUG_ICONS, PlugType } from '@/lib/plugTypes'
 import { calculateDistanceMeters } from '@/lib/geo'
 import CheckInModal from '@/components/stations/CheckInModal'
 import ClaimButton from '@/components/stations/ClaimButton'
@@ -45,7 +45,7 @@ interface StationDetail {
   status: string | null
   isFree: boolean | null
   isIndoor: boolean | null
-  plugTypes: string[] | null
+  plugTypes: PlugType[] | null
   accessNotes: string | null
   claimedBy: string | null
   claimedAt: string | null
@@ -145,6 +145,8 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
     (station
       ? `${station.latitude.toFixed(4)}, ${station.longitude.toFixed(4)}`
       : '')
+  const displayPlugTypes: PlugType[] =
+    station?.plugTypes?.length ? station.plugTypes : ['Other']
   const distanceMeters =
     station && userCoords
       ? calculateDistanceMeters(userCoords.latitude, userCoords.longitude, station.latitude, station.longitude)
@@ -252,21 +254,19 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
               </div>
 
               {/* Plug types */}
-              {station.plugTypes?.length ? (
-                <div className="space-y-1.5">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/80">Plug Types</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {station.plugTypes.map((pt) => (
-                      <span
-                        key={pt}
-                        className={`text-xs px-2.5 py-1 rounded-xl font-medium border border-border/60 ${PLUG_COLORS[pt] ?? PLUG_COLORS.Other}`}
-                      >
-                        {PLUG_ICONS[pt] ?? '🔌'} {pt}
-                      </span>
-                    ))}
-                  </div>
+              <div className="space-y-1.5">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/80">Plug Types</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {displayPlugTypes.map((pt) => (
+                    <span
+                      key={pt}
+                      className={`text-xs px-2.5 py-1 rounded-xl font-medium border border-border/60 ${PLUG_COLORS[pt] ?? PLUG_COLORS.Other}`}
+                    >
+                      {PLUG_ICONS[pt] ?? '🔌'} {PLUG_FRIENDLY_NAMES[pt] ?? pt}
+                    </span>
+                  ))}
                 </div>
-              ) : null}
+              </div>
 
               {/* Access notes */}
               {station.accessNotes && (

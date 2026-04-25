@@ -15,7 +15,7 @@ import {
   CircleDollarSign,
   Wallet,
 } from 'lucide-react'
-import { PLUG_COLORS, PLUG_ICONS } from '@/lib/plugTypes'
+import { PLUG_COLORS, PLUG_FRIENDLY_NAMES, PLUG_ICONS, PlugType } from '@/lib/plugTypes'
 import Image from 'next/image'
 
 async function getStation(id: string) {
@@ -65,6 +65,8 @@ export default async function StationDetailPage({ params }: { params: { id: stri
   const locationLabel =
     [station.address, station.city, station.country].filter(Boolean).join(', ') ||
     `${station.latitude.toFixed(4)}, ${station.longitude.toFixed(4)}`
+  const displayPlugTypes: PlugType[] =
+    station.plugTypes?.length ? station.plugTypes : ['Other']
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -139,21 +141,19 @@ export default async function StationDetailPage({ params }: { params: { id: stri
         </div>
 
         {/* Plug types */}
-        {station.plugTypes?.length ? (
-          <div className="space-y-1.5">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/80">Plug Types</p>
-            <div className="flex flex-wrap gap-1.5">
-              {station.plugTypes.map((pt: string) => (
-                <span
-                  key={pt}
-                  className={`text-xs px-2.5 py-1 rounded-xl border border-border/60 font-medium ${PLUG_COLORS[pt] ?? PLUG_COLORS.Other}`}
-                >
-                  {PLUG_ICONS[pt] ?? '🔌'} {pt}
-                </span>
-              ))}
-            </div>
+        <div className="space-y-1.5">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/80">Plug Types</p>
+          <div className="flex flex-wrap gap-1.5">
+            {displayPlugTypes.map((pt) => (
+              <span
+                key={pt}
+                className={`text-xs px-2.5 py-1 rounded-xl border border-border/60 font-medium ${PLUG_COLORS[pt] ?? PLUG_COLORS.Other}`}
+              >
+                {PLUG_ICONS[pt] ?? '🔌'} {PLUG_FRIENDLY_NAMES[pt] ?? pt}
+              </span>
+            ))}
           </div>
-        ) : null}
+        </div>
 
         {station.accessNotes && (
           <div className="space-y-1.5">

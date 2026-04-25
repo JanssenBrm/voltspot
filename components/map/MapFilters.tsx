@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ALL_PLUG_TYPES } from '@/lib/plugTypes'
+import { ALL_PLUG_TYPES, PLUG_FRIENDLY_NAMES, PLUG_ICONS } from '@/lib/plugTypes'
 
 export interface Filters {
   plugType: string
@@ -59,7 +59,7 @@ export default function MapFilters({ filters, onFiltersChange }: MapFiltersProps
               <SelectContent>
                 <SelectItem value="all">Any plug type</SelectItem>
                 {ALL_PLUG_TYPES.map((p) => (
-                  <SelectItem key={p} value={p}>{p}</SelectItem>
+                  <SelectItem key={p} value={p}>{PLUG_ICONS[p]} {PLUG_FRIENDLY_NAMES[p]}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
