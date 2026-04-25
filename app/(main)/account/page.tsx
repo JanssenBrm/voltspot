@@ -59,9 +59,9 @@ export default function AccountPage() {
         </div>
         <div className="space-y-1">
           <Label>Display Name</Label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} />
+          <Input value={name} onChange={(e) => setName(e.target.value)} className='p-5'/>
         </div>
-        <Button onClick={saveProfile} disabled={loading} className="p-4">
+        <Button onClick={saveProfile} disabled={loading} className="p-5">
           {loading ? 'Saving...' : 'Save Changes'}
         </Button>
       </section>
@@ -71,7 +71,7 @@ export default function AccountPage() {
       {/* Sign out */}
       <section className="space-y-2">
         <h2 className="font-semibold">Session</h2>
-        <Button variant="outline" className="p-4" onClick={() => signOut({ redirectUrl: '/' })}>
+        <Button variant="outline" className="p-5" onClick={() => signOut({ redirectUrl: '/' })}>
           Sign Out
         </Button>
       </section>

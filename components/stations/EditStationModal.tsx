@@ -294,8 +294,8 @@ export default function EditStationModal({ open, onClose, onSaved, station }: Ed
 
           {/* Actions */}
           <div className="flex gap-2 pt-2">
-            <Button variant="outline" onClick={onClose} className="flex-1 p-4 rounded-xl">Cancel</Button>
-            <Button onClick={submit} disabled={loading} className="flex-1 p-4 rounded-xl">
+            <Button variant="outline" onClick={onClose} className="flex-1 p-5 rounded-xl">Cancel</Button>
+            <Button onClick={submit} disabled={loading} className="flex-1 p-5 rounded-xl">
               {loading ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>

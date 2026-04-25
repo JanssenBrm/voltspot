@@ -202,8 +202,8 @@ export default function ModerationQueue() {
 
             <div className="flex gap-2 pt-1">
               <Button
-                size="sm"
-                className="rounded-full p-4 gap-1.5"
+                size="lg"
+                className="rounded-full p-5 gap-1.5"
                 onClick={() => review(item.id, 'approve')}
                 disabled={processing === item.id}
               >
@@ -211,9 +211,9 @@ export default function ModerationQueue() {
                 Approve
               </Button>
               <Button
-                size="sm"
+                size="lg"
                 variant="outline"
-                className="rounded-full p-4 gap-1.5"
+                className="rounded-full p-5 gap-1.5"
                 onClick={() => review(item.id, 'reject')}
                 disabled={processing === item.id}
               >

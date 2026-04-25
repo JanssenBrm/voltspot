@@ -318,7 +318,7 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
               {/* Action buttons */}
               <div className="flex flex-col gap-2">
                 <Button
-                  className="w-full p-4 rounded-xl shadow-sm hover:shadow"
+                  className="w-full p-5 rounded-xl shadow-sm hover:shadow"
                   onClick={() => setCheckInOpen(true)}
                   disabled={!canCheckIn}
                 >
@@ -338,7 +338,7 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
-                    className="flex-1 p-4 rounded-xl"
+                    className="flex-1 p-5 rounded-xl"
                     onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${station.latitude},${station.longitude}`, '_blank', 'noopener,noreferrer')}
                   >
                     <Navigation className="h-3 w-3 mr-1" />
@@ -346,7 +346,7 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
                   </Button>
                   <Button
                     variant="outline"
-                    className="flex-1 p-4 rounded-xl"
+                    className="flex-1 p-5 rounded-xl"
                     onClick={() => { onClose(); router.push(`/stations/${station.id}`) }}
                   >
                     <ExternalLink className="h-3 w-3 mr-1" />
@@ -354,12 +354,12 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
                   </Button>
                 </div>
 
-                <Button variant="ghost" className="rounded-xl p-4" onClick={suggestEdit}>
+                <Button variant="ghost" className="rounded-xl p-5" onClick={suggestEdit}>
                   <Edit className="h-3 w-3 mr-1" />
                   Suggest Edit
                 </Button>
 
-                <Button variant="ghost" className="rounded-xl p-4 text-destructive hover:text-destructive" onClick={requestRemoval}>
+                <Button variant="ghost" className="rounded-xl p-5 text-destructive hover:text-destructive" onClick={requestRemoval}>
                   <Trash2 className="h-3 w-3 mr-1" />
                   Request Removal
                 </Button>
@@ -402,7 +402,7 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
 
               <Button
                 variant="ghost"
-                className="w-full p-4 rounded-xl text-destructive hover:text-destructive hover:bg-red-100"
+                className="w-full p-5 rounded-xl text-destructive hover:text-destructive hover:bg-red-100"
                 onClick={() => { onClose(); router.push(`/stations/${station.id}?report=1`) }}
               >
                 <Flag className="h-3 w-3 mr-1" />
