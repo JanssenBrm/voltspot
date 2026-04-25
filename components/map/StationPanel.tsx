@@ -145,6 +145,8 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
     (station
       ? `${station.latitude.toFixed(4)}, ${station.longitude.toFixed(4)}`
       : '')
+  const displayPlugTypes: PlugType[] =
+    station?.plugTypes?.length ? station.plugTypes : ['Other']
   const distanceMeters =
     station && userCoords
       ? calculateDistanceMeters(userCoords.latitude, userCoords.longitude, station.latitude, station.longitude)
@@ -252,21 +254,19 @@ export default function StationPanel({ stationId, onClose, userId }: StationPane
               </div>
 
               {/* Plug types */}
-              {station.plugTypes?.length ? (
-                <div className="space-y-1.5">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/80">Plug Types</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {station.plugTypes.map((pt) => (
-                      <span
-                        key={pt}
-                        className={`text-xs px-2.5 py-1 rounded-xl font-medium border border-border/60 ${PLUG_COLORS[pt] ?? PLUG_COLORS.Other}`}
-                      >
-                        {PLUG_ICONS[pt] ?? '🔌'} {PLUG_FRIENDLY_NAMES[pt] ?? pt}
-                      </span>
-                    ))}
-                  </div>
+              <div className="space-y-1.5">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/80">Plug Types</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {displayPlugTypes.map((pt) => (
+                    <span
+                      key={pt}
+                      className={`text-xs px-2.5 py-1 rounded-xl font-medium border border-border/60 ${PLUG_COLORS[pt] ?? PLUG_COLORS.Other}`}
+                    >
+                      {PLUG_ICONS[pt] ?? '🔌'} {PLUG_FRIENDLY_NAMES[pt] ?? pt}
+                    </span>
+                  ))}
                 </div>
-              ) : null}
+              </div>
 
               {/* Access notes */}
               {station.accessNotes && (
