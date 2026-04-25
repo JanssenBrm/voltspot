@@ -5,12 +5,40 @@ import BadgeGrid from '@/components/gamification/BadgeGrid'
 import StationCard from '@/components/stations/StationCard'
 import RouteCard from '@/components/routes/RouteCard'
 import { CalendarDays, CheckCircle } from 'lucide-react'
+import { db } from '@/lib/db'
+import { users, userBadges, badges, stations, checkIns, routes } from '@/lib/db/schema'
+import { eq, count } from 'drizzle-orm'
 
 async function getUser(id: string) {
-  const base = process.env.NEXTAUTH_URL ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
-  const res = await fetch(`${base}/api/users/${id}`, { cache: 'no-store' })
-  if (!res.ok) return null
-  return res.json()
+  const [user] = await db
+    .select({ id: users.id, name: users.name, avatarUrl: users.avatarUrl, points: users.points, createdAt: users.createdAt })
+    .from(users)
+    .where(eq(users.id, id))
+    .limit(1)
+  if (!user) return null
+
+  const earnedBadges = await db
+    .select({ badge: badges, earnedAt: userBadges.earnedAt })
+    .from(userBadges)
+    .leftJoin(badges, eq(userBadges.badgeSlug, badges.slug))
+    .where(eq(userBadges.userId, id))
+
+  const claimedStations = await db
+    .select({ id: stations.id, name: stations.name, city: stations.city, country: stations.country })
+    .from(stations)
+    .where(eq(stations.claimedBy, id))
+
+  const userRoutes = await db
+    .select({ id: routes.id, name: routes.name, distanceKm: routes.distanceKm })
+    .from(routes)
+    .where(eq(routes.userId, id))
+
+  const [checkInCount] = await db
+    .select({ total: count() })
+    .from(checkIns)
+    .where(eq(checkIns.userId, id))
+
+  return { ...user, badges: earnedBadges, claimedStations, routes: userRoutes, checkInCount: checkInCount?.total ?? 0 }
 }
 
 export default async function ProfilePage({ params }: { params: { username: string } }) {
@@ -20,7 +48,7 @@ export default async function ProfilePage({ params }: { params: { username: stri
   const earnedSlugs = new Set<string>((user.badges ?? []).map((b: any) => b.badge?.slug).filter(Boolean))
   const earnedDates: Record<string, string> = {}
   for (const b of user.badges ?? []) {
-    if (b.badge?.slug) earnedDates[b.badge.slug] = b.earnedAt
+    if (b.badge?.slug && b.earnedAt) earnedDates[b.badge.slug] = b.earnedAt.toISOString()
   }
 
   return (
@@ -36,7 +64,7 @@ export default async function ProfilePage({ params }: { params: { username: stri
           <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
             <span className="flex items-center gap-1">
               <CalendarDays className="h-3.5 w-3.5" />
-              Joined {new Date(user.createdAt).toLocaleDateString()}
+              Joined {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : ''}
             </span>
             <span className="flex items-center gap-1">
               <CheckCircle className="h-3.5 w-3.5" />

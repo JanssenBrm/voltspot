@@ -14,12 +14,41 @@ import {
 } from 'lucide-react'
 import { PLUG_COLORS, PLUG_FRIENDLY_NAMES, PLUG_ICONS, PlugType } from '@/lib/plugTypes'
 import Image from 'next/image'
+import { db } from '@/lib/db'
+import { stations, checkIns, users } from '@/lib/db/schema'
+import { eq, desc } from 'drizzle-orm'
 
 async function getStation(id: string) {
-  const base = process.env.NEXTAUTH_URL ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
-  const res = await fetch(`${base}/api/stations/${id}`, { cache: 'no-store' })
-  if (!res.ok) return null
-  return res.json()
+  const [station] = await db.select().from(stations).where(eq(stations.id, id)).limit(1)
+  if (!station) return null
+
+  const recentCheckIns = await db
+    .select({
+      id: checkIns.id,
+      rating: checkIns.rating,
+      comment: checkIns.comment,
+      statusReported: checkIns.statusReported,
+      createdAt: checkIns.createdAt,
+      userName: users.name,
+      userAvatar: users.avatarUrl,
+    })
+    .from(checkIns)
+    .leftJoin(users, eq(checkIns.userId, users.id))
+    .where(eq(checkIns.stationId, id))
+    .orderBy(desc(checkIns.createdAt))
+    .limit(5)
+
+  let owner = null
+  if (station.claimedBy) {
+    const [ownerRow] = await db
+      .select({ id: users.id, name: users.name, avatarUrl: users.avatarUrl })
+      .from(users)
+      .where(eq(users.id, station.claimedBy))
+      .limit(1)
+    owner = ownerRow ?? null
+  }
+
+  return { ...station, recentCheckIns, owner }
 }
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
@@ -43,7 +72,7 @@ export default async function StationDetailPage({ params }: { params: { id: stri
     [station.address, station.city, station.country].filter(Boolean).join(', ') ||
     `${station.latitude.toFixed(4)}, ${station.longitude.toFixed(4)}`
   const displayPlugTypes: PlugType[] =
-    station.plugTypes?.length ? station.plugTypes : ['Other']
+    station.plugTypes?.length ? (station.plugTypes as PlugType[]) : ['Other']
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -60,7 +89,7 @@ export default async function StationDetailPage({ params }: { params: { id: stri
       latitude: station.latitude,
       longitude: station.longitude,
     },
-    url: `${process.env.NEXTAUTH_URL ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')}/stations/${station.id}`,
+    url: `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/stations/${station.id}`,
   }
 
   return (

@@ -3,34 +3,44 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { MapPin, Navigation, Copy, User } from 'lucide-react'
 import StationCard from '@/components/stations/StationCard'
-
-const appBase = process.env.NEXTAUTH_URL ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+import { db } from '@/lib/db'
+import { routes, users, stations } from '@/lib/db/schema'
+import { eq, inArray } from 'drizzle-orm'
 
 async function getRoute(id: string) {
-  const res = await fetch(`${appBase}/api/routes/${id}`, { cache: 'no-store' })
-  if (!res.ok) return null
-  return res.json()
+  const [route] = await db
+    .select({
+      id: routes.id,
+      name: routes.name,
+      description: routes.description,
+      stationIds: routes.stationIds,
+      distanceKm: routes.distanceKm,
+      isPublic: routes.isPublic,
+      createdAt: routes.createdAt,
+      userId: routes.userId,
+      creatorName: users.name,
+      creatorAvatar: users.avatarUrl,
+    })
+    .from(routes)
+    .leftJoin(users, eq(routes.userId, users.id))
+    .where(eq(routes.id, id))
+    .limit(1)
+  return route ?? null
 }
 
 async function getStations(ids: string[]) {
-  const results = await Promise.all(
-    ids.map((id) =>
-      fetch(`${appBase}/api/stations/${id}`, { cache: 'no-store' })
-        .then((r) => r.json())
-        .catch(() => null),
-    ),
-  )
-  return results.filter(Boolean)
+  if (!ids.length) return []
+  return db.select().from(stations).where(inArray(stations.id, ids))
 }
 
 export default async function RouteDetailPage({ params }: { params: { id: string } }) {
   const route = await getRoute(params.id)
   if (!route) notFound()
 
-  const stations = route.stationIds?.length ? await getStations(route.stationIds) : []
+  const routeStations = route.stationIds?.length ? await getStations(route.stationIds) : []
 
-  const mapsUrl = stations.length
-    ? `https://www.google.com/maps/dir/${stations.map((s: any) => `${s.latitude},${s.longitude}`).join('/')}`
+  const mapsUrl = routeStations.length
+    ? `https://www.google.com/maps/dir/${routeStations.map((s) => `${s.latitude},${s.longitude}`).join('/')}`
     : null
 
   return (
@@ -62,19 +72,19 @@ export default async function RouteDetailPage({ params }: { params: { id: string
         </Button>
       </div>
 
-      {stations.length ? (
+      {routeStations.length ? (
         <div className="space-y-3">
           <h2 className="font-semibold">
-            {stations.length} Charging Stop{stations.length !== 1 ? 's' : ''}
+            {routeStations.length} Charging Stop{routeStations.length !== 1 ? 's' : ''}
             {route.distanceKm && <span className="text-muted-foreground font-normal ml-2">· {route.distanceKm.toFixed(1)} km</span>}
           </h2>
-          {stations.map((s: any, i: number) => (
+          {routeStations.map((s, i) => (
             <div key={s.id} className="flex gap-3">
               <div className="flex flex-col items-center">
                 <div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
                   {i + 1}
                 </div>
-                {i < stations.length - 1 && <div className="w-0.5 flex-1 bg-border mt-1" />}
+                {i < routeStations.length - 1 && <div className="w-0.5 flex-1 bg-border mt-1" />}
               </div>
               <div className="flex-1 pb-4">
                 <StationCard station={s} />
